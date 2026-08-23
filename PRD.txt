@@ -1,0 +1,390 @@
+# Product Requirements Document (PRD)
+
+## Unacademy Early Warning & Student Retention System
+
+---
+
+## 1. Project Overview
+
+The Unacademy Early Warning & Student Retention System is a simple web application that helps educators identify students who may be losing interest in their studies.
+
+The system checks basic student activity, such as:
+
+- Quiz completion
+- Days of inactivity
+- Login activity
+
+Based on this information, each student receives a risk score between 0 and 100.
+
+A higher score means the student may need more attention.
+
+---
+
+## 2. Problem Statement
+
+In a large batch, an educator cannot manually check the activity of every student.
+
+For example, some students may:
+
+- Stop logging in
+- Miss quizzes or DPPs
+- Become inactive for several days
+
+The goal of this project is to automatically identify such students and help educators take action early.
+
+---
+
+## 3. Project Goal
+
+The main goal is to build a simple prototype that can:
+
+1. Store student information.
+2. Track basic student activity.
+3. Calculate a student risk score.
+4. Show high-risk students to the educator.
+5. Allow the educator to send a simple nudge.
+6. Allow the student to complete a quiz and improve their status.
+
+---
+
+## 4. Simple Risk Model
+
+Each student receives a Risk Score R between 0 and 100.
+
+### 4.1 Scoring Formula
+
+R(t) = min(100, wq × (100 − Q(t)) + wl × L(t))
+
+Where:
+
+- Q(t): Quiz completion rate from 0 to 100.
+- L(t): Inactivity score.
+- wq = 0.60: Weight for quiz completion.
+- wl = 0.40: Weight for inactivity.
+
+The inactivity score is:
+
+L(t) = min(100, inactive_days × 25)
+
+This means that students who complete fewer quizzes or remain inactive for several days will have a higher risk score.
+
+### 4.2 Risk Levels
+
+- HIGH RISK: R > 75
+- MEDIUM RISK: 45 ≤ R ≤ 75
+- LOW RISK: R < 45
+
+---
+
+## 5. Main Users
+
+### 5.1 Educator
+
+The educator should be able to:
+
+- View a list of students.
+- See each student's risk score.
+- Identify high-risk students.
+- Search for a student.
+- Filter students by risk level.
+- Send a nudge to a student.
+
+### 5.2 Student
+
+The student should be able to:
+
+- View their current learning status.
+- See pending or missed quizzes.
+- Receive a nudge from the educator.
+- Complete a quiz.
+- See their status improve after completing activities.
+
+---
+
+## 6. Main Features
+
+### 6.1 Educator Dashboard
+
+The dashboard should show:
+
+- Total number of students.
+- Number of high-risk students.
+- Number of medium-risk students.
+- Number of low-risk students.
+
+It should also show a table containing:
+
+- Student name.
+- Email.
+- Batch.
+- Risk score.
+- Risk level.
+- Quiz completion percentage.
+- Inactive days.
+
+---
+
+### 6.2 Student Search and Filters
+
+The educator should be able to:
+
+- Search by student name.
+- Search by email.
+- Filter by risk level.
+- Filter by batch.
+
+---
+
+### 6.3 Risk Score Calculation
+
+The system should recalculate the student's risk score when important events happen.
+
+For the prototype, support these events:
+
+#### Student Login
+
+- Set inactive days to 0.
+- Recalculate the risk score.
+
+#### Quiz Completed
+
+- Increase quiz completion rate.
+- Recalculate the risk score.
+
+#### Quiz Missed
+
+- Reduce quiz completion rate.
+- Recalculate the risk score.
+
+---
+
+### 6.4 Nudge System
+
+The educator should be able to send a simple message to a student.
+
+Example:
+
+"Hi, you have missed some quizzes. Please complete them to get back on track."
+
+The student should be able to see the message in the Student Portal.
+
+For the first version, a simple in-app notification is enough.
+
+---
+
+### 6.5 Student Portal
+
+The Student Portal should display:
+
+- Student name.
+- Current risk level or momentum status.
+- Pending quizzes.
+- Received nudges.
+- A button to complete a quiz.
+
+After a quiz is completed, the system should update the student's risk score.
+
+---
+
+### 6.6 Simple Risk History
+
+The system should store previous risk scores so the educator can see whether the student's risk is:
+
+- Improving
+- Becoming worse
+- Remaining stable
+
+For the prototype, a simple chart showing recent risk scores is enough.
+
+---
+
+## 7. Simple System Architecture
+
+The project will use:
+
+Frontend
+    ↓
+Next.js
+    ↓
+Server Actions / API Routes
+    ↓
+Risk Score Calculation
+    ↓
+PostgreSQL Database
+
+The PostgreSQL database will store:
+
+- Students
+- Batches
+- Quiz attempts
+- Risk scores
+- Risk history
+- Nudges
+
+---
+
+## 8. Technology Stack
+
+### Frontend
+
+- Next.js
+- React
+- Tailwind CSS
+
+### Backend
+
+- Next.js Server Actions or API Routes
+
+### Database
+
+- PostgreSQL
+
+---
+
+## 9. Basic Database Tables
+
+For the first version, the project can use these tables:
+
+### Students
+
+Stores:
+
+- Student ID
+- Name
+- Email
+- Batch
+- Current risk score
+- Inactive days
+
+### Quiz Attempts
+
+Stores:
+
+- Student ID
+- Quiz ID
+- Completion status
+- Score
+- Submission date
+
+### Nudges
+
+Stores:
+
+- Student ID
+- Message
+- Sent date
+- Read status
+
+### Risk History
+
+Stores:
+
+- Student ID
+- Risk score
+- Date
+
+---
+
+## 10. Project Scope for the First Version
+
+The first version should focus only on the main workflow.
+
+1. Add or display students.
+2. Store quiz activity.
+3. Calculate a risk score.
+4. Show students on the educator dashboard.
+5. Filter high-risk students.
+6. Send a simple nudge.
+7. Show the nudge to the student.
+8. Allow the student to complete a quiz.
+9. Recalculate the risk score.
+10. Display the updated result.
+
+---
+
+## 11. Features Not Needed in the First Version
+
+To keep the project manageable, these features can be added later:
+
+- SMS integration
+- WhatsApp integration
+- Email automation
+- Complex machine learning models
+- Advanced prediction algorithms
+- 100,000 events per minute
+- Complex cron jobs
+- Advanced analytics
+- Complex audit systems
+
+The first project should focus on making the basic system work correctly.
+
+---
+
+## 12. Development Plan
+
+### Phase 1: Frontend
+
+Build:
+
+- Educator Dashboard
+- Student Table
+- Search and Filters
+- Student Portal
+
+### Phase 2: Database
+
+Create PostgreSQL tables for:
+
+- Students
+- Quiz Attempts
+- Nudges
+- Risk History
+
+### Phase 3: Backend Logic
+
+Build:
+
+- Risk score calculation
+- Quiz completion handling
+- Nudge handling
+
+### Phase 4: Final Integration
+
+Connect:
+
+- Frontend
+- Backend
+- PostgreSQL
+
+Then test the complete workflow.
+
+---
+
+## 13. Final Prototype Outcome
+
+At the end of the project, the application should demonstrate this simple flow:
+
+Student becomes inactive or misses quizzes
+        ↓
+Risk score increases
+        ↓
+Student appears as high risk on the Educator Dashboard
+        ↓
+Educator sends a nudge
+        ↓
+Student completes a quiz
+        ↓
+Risk score is recalculated
+        ↓
+Student's status improves
+
+---
+
+## 14. Core Idea
+
+The main idea of this project is simple:
+
+"Identify students who are becoming inactive and help educators take action before the student completely stops learning."
+
+The project does not need advanced AI or complex infrastructure for the first version. A working dashboard, risk score calculation, student activity tracking, PostgreSQL database, and simple nudge system are enough for the first prototype.
+
