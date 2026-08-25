@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --brand-teal-darkest: #061a18;
+    --brand-teal-dark: #0a221f;
+    --brand-teal-surface: #0e2e2a;
+    --brand-teal-border: #133e38;
+    --brand-emerald: #10b981;
+    --brand-emerald-dark: #059669;
+    --brand-emerald-light: #34d399;
+    --brand-emerald-subtle: #d1fae5;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Radial aura backgrounds used in StudyShield dark teal theme */
+.studyshield-dark-mesh {
+  background-color: #071c19;
+  background-image: 
+    radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(6, 78, 59, 0.18) 0%, transparent 60%);
+}
+
+.studyshield-contour {
+  background-image: radial-gradient(circle, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Keyframes for subtle live signals */
+@keyframes signal-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-signal-float {
+  animation: signal-float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
