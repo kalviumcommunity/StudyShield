@@ -1,29 +1,13 @@
-import React, { useState } from 'react';
+"use client";
 
-export default function LoginPage({ onLoginSuccess }) {
-  const [email, setEmail] = useState('anurag@institution.edu');
-  const [password, setPassword] = useState('••••••••••••');
+import { FormEvent, useState } from "react";
+
+export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
-  function handleSubmit(event) {
-    if (event && event.preventDefault) {
-      event.preventDefault();
-    }
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      // Derive name from email or default to Anurag
-      const derivedName = email ? email.split('@')[0].split('.')[0] : 'Anurag';
-      const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
-
-      onLoginSuccess && onLoginSuccess({
-        name: formattedName || 'Anurag',
-        email: email || 'anurag@institution.edu',
-        role: 'Lead Educator'
-      });
-    }, 400);
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
   }
 
   return (
@@ -97,7 +81,7 @@ export default function LoginPage({ onLoginSuccess }) {
             <p>Access your learner insights and support queue.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form-element">
+          <form onSubmit={handleSubmit}>
             <label htmlFor="email">Work email</label>
             <div className="input-wrap">
               <span className="input-icon">@</span>
@@ -105,8 +89,6 @@ export default function LoginPage({ onLoginSuccess }) {
                 id="email"
                 name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@institution.edu"
                 autoComplete="email"
                 required
@@ -115,7 +97,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
             <div className="label-row">
               <label htmlFor="password">Password</label>
-              <a href="#forgot" onClick={(e) => e.preventDefault()}>Forgot password?</a>
+              <a href="#forgot">Forgot password?</a>
             </div>
             <div className="input-wrap">
               <span className="input-icon lock-icon">*</span>
@@ -123,8 +105,6 @@ export default function LoginPage({ onLoginSuccess }) {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
@@ -148,28 +128,19 @@ export default function LoginPage({ onLoginSuccess }) {
               <span className="custom-checkbox" />
               Keep me signed in
             </label>
-            <button 
-              className="submit-button" 
-              type="submit"
-              disabled={isLoading}
-            >
-              <span>{isLoading ? "Signing in..." : "Sign in"}</span> 
-              <span>{"->"}</span>
+            <button className="submit-button" type="submit">
+              Sign in <span>{"->"}</span>
             </button>
           </form>
 
           <div className="divider">
             <span>or continue with</span>
           </div>
-          <button 
-            className="sso-button" 
-            type="button"
-            onClick={() => handleSubmit()}
-          >
+          <button className="sso-button" type="button">
             <span className="sso-icon">G</span> Continue with Google
           </button>
           <p className="form-note">
-            New to StudyShield? <a href="#request-access" onClick={(e) => { e.preventDefault(); handleSubmit(); }}>Request access</a>
+            New to StudyShield? <a href="#request-access">Request access</a>
           </p>
           <p className="secure-note">
             <span className="shield-icon">+</span> Your workspace is protected
