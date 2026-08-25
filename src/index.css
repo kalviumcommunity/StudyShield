@@ -435,12 +435,20 @@
   border: 0;
   color: #6b7b7c;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 7px;
+  padding: 6px 10px;
   position: absolute;
-  right: 9px;
-  top: 6px;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  user-select: none;
+  border-radius: 4px;
+}
+.visibility-button:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.04);
 }
 .checkbox-row {
   align-items: center;
