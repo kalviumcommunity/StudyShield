@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '../components/layout/Navbar';
 import WelcomeHeader from '../components/layout/WelcomeHeader';
 import MetricCard from '../components/dashboard/MetricCard';
@@ -10,6 +10,7 @@ import RecentActivity from '../components/dashboard/RecentActivity';
 import QuickActions from '../components/dashboard/QuickActions';
 import InsightCard from '../components/dashboard/InsightCard';
 import { LoadingState, EmptyState, ErrorState } from '../components/dashboard/StateViews';
+import MessagesOutreach from './MessagesOutreach';
 
 import NudgeModal from '../components/modals/NudgeModal';
 import StudentDetailDrawer from '../components/modals/StudentDetailDrawer';
@@ -20,13 +21,51 @@ import { MOCK_STUDENTS } from '../data/mockStudents';
 import { OVERVIEW_METRICS } from '../data/dashboardMetrics';
 import { CheckCircle2, Bell, AlertTriangle } from 'lucide-react';
 
+import { createMessages } from '../services/messageService';
+
 export default function Dashboard({ onLogout }) {
   // State management
-  const [activeTab, setActiveTab] = useState('Overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined' && (window.location.pathname === '/messages' || window.location.pathname === '/messages/')) {
+      return 'Messages';
+    }
+    return 'Overview';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('All Batches');
   const [viewState, setViewState] = useState('normal'); // normal, loading, empty, error
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sync route on popstate (browser back / forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/messages' || window.location.pathname === '/messages/') {
+        setActiveTab('Messages');
+      } else {
+        setActiveTab('Overview');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    try {
+      if (tab === 'Messages' || tab === 'Messages & Outreach') {
+        window.history.pushState(null, '', '/messages');
+      } else if (activeTab === 'Messages' || activeTab === 'Messages & Outreach') {
+        window.history.pushState(null, '', '/');
+      }
+    } catch (e) {
+      // browser environment fallback
+    }
+
+    if (tab === 'Students' || tab === 'Risk Signals') {
+      const el = document.getElementById('students-attention-heading');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Student dataset state
   const [students, setStudents] = useState(MOCK_STUDENTS);
@@ -60,7 +99,26 @@ export default function Dashboard({ onLogout }) {
   };
 
   const handleNudgeSent = (studentId, message) => {
-    showToast(`Nudge sent successfully to student.`);
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      createMessages({
+        studentId: student.id,
+        studentName: student.name,
+        studentAvatar: student.avatar,
+        studentEmail: student.email,
+        batch: student.batch,
+        type: 'Check-in',
+        subject: 'Educator Nudge: Checking in on your progress',
+        content: message,
+        trigger: 'Manual Educator Nudge from Overview Queue',
+        triggerSignalType: 'manual',
+        riskLevel: student.statusCategory === 'HIGH' ? 'High' : student.statusCategory === 'MEDIUM' ? 'Medium' : 'Healthy',
+        riskScore: student.riskScore,
+        requiresResponse: true,
+        relatedSignals: student.signals || []
+      });
+    }
+    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
   };
 
   const handleAddStudent = (newStudent) => {
@@ -121,27 +179,23 @@ export default function Dashboard({ onLogout }) {
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'Students' || tab === 'Risk Signals') {
-            const el = document.getElementById('students-attention-heading');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
+        onTabChange={handleTabChange}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onLogout={onLogout}
       />
 
-      {/* Welcome Header */}
-      <WelcomeHeader
-        selectedBatch={selectedBatch}
-        onBatchChange={setSelectedBatch}
-        onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
-        viewState={viewState}
-        onViewStateChange={setViewState}
-      />
+      {/* Welcome Header (Shown on Overview/Students/Signals) */}
+      {activeTab !== 'Messages' && activeTab !== 'Messages & Outreach' && (
+        <WelcomeHeader
+          selectedBatch={selectedBatch}
+          onBatchChange={setSelectedBatch}
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
+          viewState={viewState}
+          onViewStateChange={setViewState}
+        />
+      )}
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
@@ -153,6 +207,13 @@ export default function Dashboard({ onLogout }) {
           <EmptyState onRefresh={() => setViewState('normal')} />
         ) : viewState === 'error' ? (
           <ErrorState onRetry={() => setViewState('normal')} />
+        ) : activeTab === 'Messages' || activeTab === 'Messages & Outreach' ? (
+          <MessagesOutreach
+            students={students}
+            selectedBatch={selectedBatch}
+            onViewStudentDetail={(student) => setSelectedStudentForDetail(student)}
+            onShowToast={showToast}
+          />
         ) : (
           <>
             {/* 1. Key Overview Metrics Grid (4 Cards) */}

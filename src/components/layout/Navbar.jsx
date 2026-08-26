@@ -11,6 +11,7 @@ import {
   BarChart3, 
   Activity, 
   Users, 
+  MessageSquare,
   ExternalLink,
   Menu,
   X,
@@ -33,6 +34,7 @@ export default function Navbar({
   const navItems = [
     { name: 'Overview', icon: BarChart3 },
     { name: 'Students', icon: Users },
+    { name: 'Messages', label: 'Messages & Outreach', icon: MessageSquare },
     { name: 'Risk Signals', icon: ShieldAlert },
     { name: 'Activity', icon: Activity },
     { name: 'Reports', icon: Layers }
@@ -65,7 +67,7 @@ export default function Navbar({
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-slate-200" aria-label="Main Navigation">
               {navItems.map((item) => {
-                const isActive = activeTab === item.name;
+                const isActive = activeTab === item.name || (item.name === 'Messages' && activeTab === 'Messages & Outreach');
                 return (
                   <button
                     key={item.name}
@@ -76,7 +78,7 @@ export default function Navbar({
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                     }`}
                   >
-                    {item.name}
+                    {item.label || item.name}
                     {isActive && (
                       <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-emerald-600 rounded-full" />
                     )}
@@ -226,6 +228,16 @@ export default function Navbar({
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
+                        onTabChange && onTabChange('Messages');
+                      }}
+                      className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4 text-slate-400" />
+                      Messages & Outreach
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
                         onTabChange && onTabChange('Reports');
                       }}
                       className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2"
@@ -282,13 +294,13 @@ export default function Navbar({
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2.5 ${
-                  activeTab === item.name
+                  activeTab === item.name || (item.name === 'Messages' && activeTab === 'Messages & Outreach')
                     ? 'text-emerald-700 bg-emerald-50 font-semibold'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 <item.icon className="w-4 h-4" />
-                {item.name}
+                {item.label || item.name}
               </button>
             ))}
           </div>
