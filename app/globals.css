@@ -1,37 +1,96 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
 
-:root {
-  --ink: #111f25;
-  --muted: #738187;
-  --green: #12b982;
-  --mint: #e5f6ef;
-  --line: #dce7e3;
-  --cream: #f7faf7;
+@layer base {
+  :root {
+    --brand-teal-darkest: #061a18;
+    --brand-teal-dark: #0a221f;
+    --brand-teal-surface: #0e2e2a;
+    --brand-teal-border: #133e38;
+    --brand-emerald: #10b981;
+    --brand-emerald-dark: #059669;
+    --brand-emerald-light: #34d399;
+    --brand-emerald-subtle: #d1fae5;
+
+    /* Login Variables */
+    --ink: #111f25;
+    --muted: #738187;
+    --green: #12b982;
+    --mint: #e5f6ef;
+    --line: #dce7e3;
+    --cream: #f7faf7;
+  }
+
+  body {
+    font-family: 'DM Sans', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    overflow-x: hidden;
+  }
 }
-* {
-  box-sizing: border-box;
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-html,
-body {
-  min-height: 100%;
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
-body {
-  margin: 0;
-  color: var(--ink);
-  background: var(--cream);
-  font-family: "DM Sans", sans-serif;
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
 }
-button,
-input {
-  font: inherit;
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
+
+/* Radial aura backgrounds used in StudyShield dark teal theme */
+.studyshield-dark-mesh {
+  background-color: #071c19;
+  background-image: 
+    radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(6, 78, 59, 0.18) 0%, transparent 60%);
 }
-a {
-  color: inherit;
+
+.studyshield-contour {
+  background-image: radial-gradient(circle, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
+
+/* Keyframes for subtle live signals */
+@keyframes signal-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-signal-float {
+  animation: signal-float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ========================================================
+   EXACT LOGIN PAGE STYLES (app/globals.css)
+   ======================================================== */
 .login-shell {
   display: grid;
   grid-template-columns: minmax(480px, 0.95fr) minmax(500px, 1.05fr);
@@ -99,15 +158,11 @@ a {
   background: var(--green);
   color: white;
   border-radius: 10px;
-  font:
-    800 22px/1 "Manrope",
-    sans-serif;
+  font: 800 22px/1 "Manrope", sans-serif;
   box-shadow: 0 8px 22px rgba(18, 185, 130, 0.2);
 }
 .brand-name {
-  font:
-    700 18px/1 "Manrope",
-    sans-serif;
+  font: 700 18px/1 "Manrope", sans-serif;
   letter-spacing: -0.5px;
 }
 .brand-copy {
@@ -138,9 +193,7 @@ a {
   box-shadow: 0 0 0 4px rgba(18, 185, 130, 0.15);
 }
 .brand-copy h1 {
-  font:
-    800 clamp(42px, 5vw, 69px)/1.04 "Manrope",
-    sans-serif;
+  font: 800 clamp(42px, 5vw, 69px)/1.04 "Manrope", sans-serif;
   letter-spacing: -3.8px;
   margin: 22px 0 24px;
 }
@@ -275,9 +328,7 @@ a {
   gap: 3px;
 }
 .signal-footer strong {
-  font:
-    700 17px "Manrope",
-    sans-serif;
+  font: 700 17px "Manrope", sans-serif;
 }
 .signal-footer .green {
   color: #49d5a3;
@@ -315,9 +366,7 @@ a {
   margin: 0 0 11px;
 }
 .form-heading h2 {
-  font:
-    800 30px/1.2 "Manrope",
-    sans-serif;
+  font: 800 30px/1.2 "Manrope", sans-serif;
   letter-spacing: -1.2px;
   margin: 0 0 10px;
 }
@@ -326,12 +375,12 @@ a {
   font-size: 14px;
   margin: 0;
 }
-form {
+.login-form-element {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-label {
+.login-form-element label {
   color: #3b4a4f;
   font-size: 12px;
   font-weight: 700;
@@ -373,9 +422,7 @@ label {
   padding: 13px 44px;
   width: 100%;
   font-size: 13px;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .input-wrap input:focus {
   border-color: var(--green);
@@ -389,12 +436,20 @@ label {
   border: 0;
   color: #6b7b7c;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 7px;
+  padding: 6px 10px;
   position: absolute;
-  right: 9px;
-  top: 6px;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  user-select: none;
+  border-radius: 4px;
+}
+.visibility-button:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.04);
 }
 .checkbox-row {
   align-items: center;
@@ -436,9 +491,7 @@ label {
   font-weight: 700;
   justify-content: center;
   padding: 14px;
-  transition:
-    background 0.2s,
-    transform 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
 .submit-button:hover {
   background: #0da873;
@@ -485,9 +538,7 @@ label {
 }
 .sso-icon {
   color: #4285f4;
-  font:
-    700 15px Georgia,
-    serif;
+  font: 700 15px Georgia, serif;
   margin-right: 9px;
 }
 .form-note {
