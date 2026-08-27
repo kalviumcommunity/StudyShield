@@ -1,4 +1,4 @@
-"use client";
+ch"use client";
 
 import { FormEvent, useState } from "react";
 
@@ -114,6 +114,8 @@ export default function LoginPage() {
                 className="visibility-button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-controls="password"
+                aria-pressed={showPassword}
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
