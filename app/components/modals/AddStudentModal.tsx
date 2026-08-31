@@ -140,7 +140,7 @@ export default function AddStudentModal({ isOpen, onClose, onAddStudent }) {
                 min="0"
                 max="30"
                 value={inactiveDays}
-                onChange={(e) => setInactiveDays(e.target.value)}
+                onChange={(e) => setInactiveDays(Number(e.target.value))}
                 className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
             </div>
@@ -153,7 +153,7 @@ export default function AddStudentModal({ isOpen, onClose, onAddStudent }) {
                 min="0"
                 max="100"
                 value={quizCompletionRate}
-                onChange={(e) => setQuizCompletionRate(e.target.value)}
+                onChange={(e) => setQuizCompletionRate(Number(e.target.value))}
                 className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
             </div>

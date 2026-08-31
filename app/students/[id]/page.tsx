@@ -135,7 +135,7 @@ export default function StudentDetailPage() {
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl font-bold text-base flex items-center justify-center shadow-xs ${
+                <div className={`w-12 h-12 rounded-2xl font-bold text-base flex items-center justify-center shrink-0 shadow-xs ${
                   isHighRisk
                     ? 'bg-rose-100 text-rose-700 border border-rose-200'
                     : student.statusCategory === 'MEDIUM'
@@ -145,7 +145,7 @@ export default function StudentDetailPage() {
                   {student.avatar}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                       {student.name}
                     </h1>
@@ -165,7 +165,7 @@ export default function StudentDetailPage() {
 
               <button
                 onClick={() => setIsNudgeOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all w-full sm:w-auto"
               >
                 <Send className="w-4 h-4" />
                 <span>Reach Out / Send Nudge</span>
@@ -184,17 +184,17 @@ export default function StudentDetailPage() {
               
               {/* Formula Card */}
               <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                     <Calculator className="w-4 h-4 text-emerald-600" />
                     Retention Risk Formula Breakdown
                   </h3>
-                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md self-start sm:self-auto">
                     R(t) = min(100, 0.6 × (100 − Q) + 0.4 × L)
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Quiz Deficit (60% weight)</span>
                     <p className="text-lg font-bold text-slate-900 mt-1">+{quizFactor} pts</p>
