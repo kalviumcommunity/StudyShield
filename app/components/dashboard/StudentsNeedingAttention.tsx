@@ -156,23 +156,24 @@ export default function StudentsNeedingAttention({
             </div>
 
             {/* Risk Category Filter Pills */}
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium text-slate-600 border border-slate-200/60">
+            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium text-slate-600 border border-slate-200/60 overflow-x-auto max-w-full">
               {[
-                { key: 'ALL', label: 'All' },
-                { key: 'HIGH', label: 'High Risk (70–100)' },
-                { key: 'MEDIUM', label: 'Medium (40–69)' },
-                { key: 'HEALTHY', label: 'Healthy (0–39)' }
+                { key: 'ALL', label: 'All', shortLabel: 'All' },
+                { key: 'HIGH', label: 'High Risk (70–100)', shortLabel: 'High Risk' },
+                { key: 'MEDIUM', label: 'Medium (40–69)', shortLabel: 'Medium' },
+                { key: 'HEALTHY', label: 'Healthy (0–39)', shortLabel: 'Healthy' }
               ].map((filter) => (
                 <button
                   key={filter.key}
                   onClick={() => setRiskFilter(filter.key)}
-                  className={`px-2.5 py-1 rounded-md transition-all ${
+                  className={`px-2 sm:px-2.5 py-1 rounded-md transition-all whitespace-nowrap text-[11px] sm:text-xs ${
                     riskFilter === filter.key
                       ? 'bg-white text-slate-900 font-bold shadow-xs'
                       : 'hover:text-slate-900 text-slate-500'
                   }`}
                 >
-                  {filter.label}
+                  <span className="hidden sm:inline">{filter.label}</span>
+                  <span className="sm:hidden">{filter.shortLabel}</span>
                 </button>
               ))}
             </div>
@@ -198,7 +199,7 @@ export default function StudentsNeedingAttention({
 
       {/* Table & List View */}
       {filteredStudents.length === 0 ? (
-        <div className="p-12 text-center">
+        <div className="p-8 sm:p-12 text-center">
           <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -217,130 +218,222 @@ export default function StudentsNeedingAttention({
           </button>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                <th scope="col" className="py-3.5 pl-6 pr-4">Student</th>
-                <th scope="col" className="py-3.5 px-4 text-center">Risk Score</th>
-                <th scope="col" className="py-3.5 px-4">Detected Signals</th>
-                <th scope="col" className="py-3.5 px-4">Last Activity</th>
-                <th scope="col" className="py-3.5 pr-6 pl-4 text-right">Recommended Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs">
-              {filteredStudents.map((student) => {
-                const category = getRiskCategory(student.riskScore);
-                const isHighRisk = student.statusCategory === 'HIGH';
+        <>
+          {/* Mobile Card List (md:hidden) */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filteredStudents.map((student) => {
+              const category = getRiskCategory(student.riskScore);
+              const isHighRisk = student.statusCategory === 'HIGH';
 
-                return (
-                  <tr 
-                    key={student.id} 
-                    onClick={() => onReviewStudent && onReviewStudent(student)}
-                    className="hover:bg-slate-50/90 transition-colors cursor-pointer group"
-                  >
-                    
-                    {/* Student Info */}
-                    <td className="py-4 pl-6 pr-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 shadow-xs ${
-                          isHighRisk 
-                            ? 'bg-rose-100 text-rose-700 border border-rose-200' 
-                            : category.label === 'Medium Risk'
-                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                            : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                        }`}>
-                          {student.avatar || student.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors text-sm">
-                              {student.name}
-                            </span>
-                            {isHighRisk && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                            <span>{student.batch}</span>
-                            <span>•</span>
-                            <span className="truncate max-w-[140px] text-slate-400">{student.email}</span>
-                          </div>
-                        </div>
+              return (
+                <div
+                  key={student.id}
+                  onClick={() => onReviewStudent && onReviewStudent(student)}
+                  className="p-4 hover:bg-slate-50 transition-colors cursor-pointer space-y-3"
+                >
+                  {/* Top row: Avatar + Name + Risk Score */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 shadow-xs ${
+                        isHighRisk 
+                          ? 'bg-rose-100 text-rose-700 border border-rose-200' 
+                          : category.label === 'Medium Risk'
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      }`}>
+                        {student.avatar || student.name.substring(0, 2).toUpperCase()}
                       </div>
-                    </td>
-
-                    {/* Risk Score */}
-                    <td className="py-4 px-4 text-center">
-                      <div className="inline-flex flex-col items-center">
-                        <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                          isHighRisk
-                            ? 'bg-rose-100 text-rose-800 border border-rose-200/80'
-                            : category.label === 'Medium Risk'
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200/80'
-                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200/80'
-                        }`}>
-                          <span className="text-sm font-extrabold">{student.riskScore}</span>
-                          <span className="text-[10px] text-slate-500 font-normal ml-1">/100</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-bold text-slate-900 text-sm truncate">
+                            {student.name}
+                          </h4>
+                          {isHighRisk && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                          )}
                         </div>
-                        <span className="text-[10px] font-semibold text-slate-500 mt-1 uppercase tracking-tight">
-                          {student.status}
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {student.batch} • {student.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                        isHighRisk
+                          ? 'bg-rose-100 text-rose-800 border border-rose-200/80'
+                          : category.label === 'Medium Risk'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200/80'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200/80'
+                      }`}>
+                        {student.riskScore} <span className="text-[10px] text-slate-500 font-normal ml-0.5">/100</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Signals pills */}
+                  {student.signals && student.signals.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {student.signals.map((signal) => (
+                        <span
+                          key={signal.id}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${
+                            signal.severity === 'high'
+                              ? 'bg-rose-50/80 text-rose-800 border-rose-200/60'
+                              : signal.severity === 'medium'
+                              ? 'bg-amber-50/80 text-amber-800 border-amber-200/60'
+                              : 'bg-emerald-50/80 text-emerald-800 border-emerald-200/60'
+                          }`}
+                        >
+                          {getSignalIcon(signal.type)}
+                          <span>{signal.text}</span>
                         </span>
-                      </div>
-                    </td>
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Detected Early Warning Signals */}
-                    <td className="py-4 px-4">
-                      <div className="flex flex-wrap gap-1.5 max-w-md">
-                        {student.signals.map((signal) => (
-                          <span
-                            key={signal.id}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border ${
-                              signal.severity === 'high'
-                                ? 'bg-rose-50/80 text-rose-800 border-rose-200/60'
-                                : signal.severity === 'medium'
-                                ? 'bg-amber-50/80 text-amber-800 border-amber-200/60'
-                                : 'bg-emerald-50/80 text-emerald-800 border-emerald-200/60'
-                            }`}
-                          >
-                            {getSignalIcon(signal.type)}
-                            <span>{signal.text}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-
-                    {/* Last Activity */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <div className="text-slate-700 font-medium">
-                        {student.lastActive}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        Quiz completion: {student.quizCompletionRate}%
-                      </div>
-                    </td>
-
-                    {/* Action CTA */}
-                    <td className="py-4 pr-6 pl-4 text-right whitespace-nowrap">
+                  {/* Activity Stats & Action CTA */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="text-slate-500 text-[11px]">
+                      <span>Last Active: <strong className="text-slate-700">{student.lastActive}</strong></span>
+                      <span className="mx-1.5">•</span>
+                      <span>Quiz: <strong className="text-slate-700">{student.quizCompletionRate}%</strong></span>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
                       {getActionButton(student)}
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+          {/* Desktop Table View (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <th scope="col" className="py-3.5 pl-6 pr-4">Student</th>
+                  <th scope="col" className="py-3.5 px-4 text-center">Risk Score</th>
+                  <th scope="col" className="py-3.5 px-4">Detected Signals</th>
+                  <th scope="col" className="py-3.5 px-4">Last Activity</th>
+                  <th scope="col" className="py-3.5 pr-6 pl-4 text-right">Recommended Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {filteredStudents.map((student) => {
+                  const category = getRiskCategory(student.riskScore);
+                  const isHighRisk = student.statusCategory === 'HIGH';
+
+                  return (
+                    <tr 
+                      key={student.id} 
+                      onClick={() => onReviewStudent && onReviewStudent(student)}
+                      className="hover:bg-slate-50/90 transition-colors cursor-pointer group"
+                    >
+                      
+                      {/* Student Info */}
+                      <td className="py-4 pl-6 pr-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 shadow-xs ${
+                            isHighRisk 
+                              ? 'bg-rose-100 text-rose-700 border border-rose-200' 
+                              : category.label === 'Medium Risk'
+                              ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                              : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                          }`}>
+                            {student.avatar || student.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors text-sm">
+                                {student.name}
+                              </span>
+                              {isHighRisk && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                              <span>{student.batch}</span>
+                              <span>•</span>
+                              <span className="truncate max-w-[140px] text-slate-400">{student.email}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Risk Score */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                            isHighRisk
+                              ? 'bg-rose-100 text-rose-800 border border-rose-200/80'
+                              : category.label === 'Medium Risk'
+                              ? 'bg-amber-100 text-amber-800 border border-amber-200/80'
+                              : 'bg-emerald-100 text-emerald-800 border border-emerald-200/80'
+                          }`}>
+                            <span className="text-sm font-extrabold">{student.riskScore}</span>
+                            <span className="text-[10px] text-slate-500 font-normal ml-1">/100</span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-500 mt-1 uppercase tracking-tight">
+                            {student.status}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Detected Early Warning Signals */}
+                      <td className="py-4 px-4">
+                        <div className="flex flex-wrap gap-1.5 max-w-md">
+                          {student.signals.map((signal) => (
+                            <span
+                              key={signal.id}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border ${
+                                signal.severity === 'high'
+                                  ? 'bg-rose-50/80 text-rose-800 border-rose-200/60'
+                                  : signal.severity === 'medium'
+                                  ? 'bg-amber-50/80 text-amber-800 border-amber-200/60'
+                                  : 'bg-emerald-50/80 text-emerald-800 border-emerald-200/60'
+                              }`}
+                            >
+                              {getSignalIcon(signal.type)}
+                              <span>{signal.text}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Last Activity */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <div className="text-slate-700 font-medium">
+                          {student.lastActive}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          Quiz completion: {student.quizCompletionRate}%
+                        </div>
+                      </td>
+
+                      {/* Action CTA */}
+                      <td className="py-4 pr-6 pl-4 text-right whitespace-nowrap">
+                        {getActionButton(student)}
+                      </td>
+
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Table Footer Summary */}
-      <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="p-3.5 sm:p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <span>
           Showing <strong className="text-slate-800">{filteredStudents.length}</strong> of{' '}
           <strong className="text-slate-800">{students.length}</strong> students
         </span>
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400">
+          <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
             <Sparkles className="w-3 h-3 text-emerald-500" />
             Formula: R(t) = min(100, 0.6×(100−Q) + 0.4×L)
           </span>

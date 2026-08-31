@@ -415,13 +415,13 @@ export default function MessageComposerModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-            <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1">
+          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="hidden sm:inline-flex text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg font-medium items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
               Delivery confirmed to Student Dashboard & In-App Alerts
             </span>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <button
                 type="button"
                 onClick={onClose}
@@ -433,7 +433,7 @@ export default function MessageComposerModal({
               <button
                 type="submit"
                 disabled={isSubmitting || selectedStudentIds.length === 0 || isSuccess}
-                className="inline-flex items-center gap-2 px-5 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-all disabled:opacity-50 flex-1 sm:flex-initial"
               >
                 {isSuccess ? (
                   <>
@@ -447,7 +447,7 @@ export default function MessageComposerModal({
                       {isSubmitting 
                         ? 'Dispatching...' 
                         : sendMode === 'schedule' 
-                        ? `Schedule for (${selectedStudentIds.length})` 
+                        ? `Schedule (${selectedStudentIds.length})` 
                         : `Send to ${selectedStudentIds.length} Student${selectedStudentIds.length === 1 ? '' : 's'}`
                       }
                     </span>

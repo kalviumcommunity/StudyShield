@@ -68,7 +68,7 @@ export default function NudgeModal({ isOpen, onClose, student, onSendNudge }) {
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
               Select Outreach Template
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {NUDGE_TEMPLATES.map((tmpl) => (
                 <button
                   type="button"
