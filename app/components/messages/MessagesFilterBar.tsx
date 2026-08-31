@@ -71,12 +71,12 @@ export default function MessagesFilterBar({
         </div>
 
         {/* Origin Quick Switcher (All / Automated / Manual) */}
-        <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-medium text-slate-600 border border-slate-200/60 self-start">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-medium text-slate-600 border border-slate-200/60 overflow-x-auto max-w-full">
             {[
-              { key: 'All', label: 'All Messages' },
-              { key: 'Automated', label: 'Automated Interventions', icon: Bot },
-              { key: 'Manual', label: 'Manual Outreach', icon: User }
+              { key: 'All', label: 'All Messages', shortLabel: 'All' },
+              { key: 'Automated', label: 'Automated Interventions', shortLabel: 'Automated', icon: Bot },
+              { key: 'Manual', label: 'Manual Outreach', shortLabel: 'Manual', icon: User }
             ].map((origin) => {
               const Icon = origin.icon;
               const isActive = selectedOrigin === origin.key;
@@ -84,14 +84,15 @@ export default function MessagesFilterBar({
                 <button
                   key={origin.key}
                   onClick={() => onOriginChange(origin.key)}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-xs ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-xs whitespace-nowrap ${
                     isActive
                       ? 'bg-white text-slate-900 font-bold shadow-xs'
                       : 'hover:text-slate-900 text-slate-500'
                   }`}
                 >
                   {Icon && <Icon className="w-3.5 h-3.5" />}
-                  <span>{origin.label}</span>
+                  <span className="hidden sm:inline">{origin.label}</span>
+                  <span className="sm:hidden">{origin.shortLabel}</span>
                 </button>
               );
             })}
@@ -183,7 +184,7 @@ export default function MessagesFilterBar({
         </div>
 
         {/* Date Range */}
-        <div>
+        <div className="col-span-2 sm:col-span-1">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
             Date Range
           </label>
