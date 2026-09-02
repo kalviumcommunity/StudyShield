@@ -1,26 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import StudentsNeedingAttention from '@/components/dashboard/StudentsNeedingAttention';
-import StudentDetailDrawer from '@/components/modals/StudentDetailDrawer';
-import NudgeModal from '@/components/modals/NudgeModal';
-import AddStudentModal from '@/components/modals/AddStudentModal';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { useAuth } from '@/components/auth/AuthContext';
-import { MOCK_STUDENTS } from '@/data/mockStudents';
-import { createMessages } from '@/services/messageService';
-import { CheckCircle2, UserPlus, Users, Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import Navbar from "@/components/layout/Navbar";
+import StudentsNeedingAttention from "@/components/dashboard/StudentsNeedingAttention";
+import StudentDetailDrawer from "@/components/modals/StudentDetailDrawer";
+import NudgeModal from "@/components/modals/NudgeModal";
+import AddStudentModal from "@/components/modals/AddStudentModal";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/components/auth/AuthContext";
+import { MOCK_STUDENTS } from "@/data/mockStudents";
+import { createMessages } from "@/services/messageService";
+import { CheckCircle2, UserPlus, Users, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function StudentsPage() {
   const { logout } = useAuth();
   const router = useRouter();
 
   const [students, setStudents] = useState(MOCK_STUDENTS);
-  const [selectedBatch, setSelectedBatch] = useState('All Batches');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudentForDetail, setSelectedStudentForDetail] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState("All Batches");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStudentForDetail, setSelectedStudentForDetail] =
+    useState(null);
   const [selectedStudentForNudge, setSelectedStudentForNudge] = useState(null);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -33,15 +34,20 @@ export default function StudentsPage() {
   };
 
   const handleTabChange = (tab) => {
-    if (tab === 'Overview' || tab === 'Risk Signals' || tab === 'Activity' || tab === 'Reports') {
-      router.push('/dashboard');
-    } else if (tab === 'Messages' || tab === 'Messages & Outreach') {
-      router.push('/messages');
+    if (
+      tab === "Overview" ||
+      tab === "Risk Signals" ||
+      tab === "Activity" ||
+      tab === "Reports"
+    ) {
+      router.push("/dashboard");
+    } else if (tab === "Messages" || tab === "Messages & Outreach") {
+      router.push("/messages");
     }
   };
 
   const handleNudgeSent = (studentId, message) => {
-    const student = students.find(s => s.id === studentId);
+    const student = students.find((s) => s.id === studentId);
     if (student) {
       createMessages({
         studentId: student.id,
@@ -49,29 +55,37 @@ export default function StudentsPage() {
         studentAvatar: student.avatar,
         studentEmail: student.email,
         batch: student.batch,
-        type: 'Check-in',
-        subject: 'Educator Nudge: Checking in on your progress',
+        type: "Check-in",
+        subject: "Educator Nudge: Checking in on your progress",
         content: message,
-        trigger: 'Manual Educator Outreach from Student Directory',
-        triggerSignalType: 'manual',
-        riskLevel: student.statusCategory === 'HIGH' ? 'High' : student.statusCategory === 'MEDIUM' ? 'Medium' : 'Healthy',
+        trigger: "Manual Educator Outreach from Student Directory",
+        triggerSignalType: "manual",
+        riskLevel:
+          student.statusCategory === "HIGH"
+            ? "High"
+            : student.statusCategory === "MEDIUM"
+              ? "Medium"
+              : "Healthy",
         riskScore: student.riskScore,
         requiresResponse: true,
-        relatedSignals: student.signals || []
+        relatedSignals: student.signals || [],
       });
     }
-    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
+    showToast(
+      `Nudge sent successfully to ${student ? student.name : "student"}.`,
+    );
   };
 
   const handleAddStudent = (newStudent) => {
-    setStudents([newStudent, ...students]);
-    showToast(`Enrolled ${newStudent.name} into StudyShield retention monitor.`);
+    setStudents((currentStudents) => [newStudent, ...currentStudents]);
+    showToast(
+      `Enrolled ${newStudent.name} into StudyShield retention monitor.`,
+    );
   };
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col antialiased">
-        
         {/* Toast Banner */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -108,7 +122,8 @@ export default function StudentsPage() {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
-                Comprehensive directory of all enrolled learners, real-time risk scores, and academic momentum.
+                Comprehensive directory of all enrolled learners, real-time risk
+                scores, and academic momentum.
               </p>
             </div>
 
@@ -130,7 +145,9 @@ export default function StudentsPage() {
             initialRiskFilter="ALL"
             onReachOut={(student) => setSelectedStudentForNudge(student)}
             onReviewStudent={(student) => setSelectedStudentForDetail(student)}
-            onToggleMonitor={(student) => showToast(`Added ${student.name} to monitored watchlist.`)}
+            onToggleMonitor={(student) =>
+              showToast(`Added ${student.name} to monitored watchlist.`)
+            }
           />
         </main>
 
@@ -149,8 +166,8 @@ export default function StudentsPage() {
               <span>•</span>
               <span>Student Directory</span>
               <span>•</span>
-              <button 
-                onClick={logout} 
+              <button
+                onClick={logout}
                 className="text-emerald-600 hover:text-emerald-700 font-semibold"
               >
                 Sign out
@@ -179,7 +196,6 @@ export default function StudentsPage() {
           onClose={() => setIsAddStudentOpen(false)}
           onAddStudent={handleAddStudent}
         />
-
       </div>
     </ProtectedRoute>
   );
