@@ -5,8 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/auth/AuthContext';
-import { MOCK_STUDENTS, getRiskCategory } from '@/data/mockStudents';
-import { getStoredMessages, createMessages } from '@/services/messageService';
+import { getRiskCategory } from '@/data/mockStudents';
 import NudgeModal from '@/components/modals/NudgeModal';
 import { 
   ArrowLeft, 
@@ -42,20 +41,19 @@ export default function StudentDetailPage() {
   };
 
   useEffect(() => {
-    if (studentId) {
-      const match = MOCK_STUDENTS.find(s => s.id === studentId || s.id === `std-${studentId}`);
-      if (match) {
-        setStudent(match);
-      } else {
-        // Fallback to first student
-        setStudent(MOCK_STUDENTS[0]);
-      }
+    if (!studentId) return;
 
-      // Fetch messages for this student
-      const allMsgs = getStoredMessages();
-      const filtered = allMsgs.filter(m => m.studentId === studentId || m.studentId === `std-${studentId}` || m.studentName === match?.name);
-      setStudentMessages(filtered);
-    }
+    // Fetch real student profile from API
+    fetch(`/api/students/${studentId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setStudent(data); })
+      .catch((err) => console.error('Student profile fetch error:', err));
+
+    // Fetch nudges (outreach history) for this student
+    fetch(`/api/nudges?studentId=${studentId}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setStudentMessages(data))
+      .catch((err) => console.error('Nudges fetch error:', err));
   }, [studentId]);
 
   if (!student) {
@@ -75,26 +73,25 @@ export default function StudentDetailPage() {
   const quizFactor = Math.round(0.6 * (100 - Q));
   const inactivityFactor = Math.round(0.4 * L);
 
-  const handleNudgeSent = (id, message) => {
-    createMessages({
-      studentId: student.id,
-      studentName: student.name,
-      studentAvatar: student.avatar,
-      studentEmail: student.email,
-      batch: student.batch,
-      type: 'Check-in',
-      subject: 'Educator Nudge: Checking in on your progress',
-      content: message,
-      trigger: 'Direct Outreach from Student Profile',
-      triggerSignalType: 'manual',
-      riskLevel: student.statusCategory === 'HIGH' ? 'High' : student.statusCategory === 'MEDIUM' ? 'Medium' : 'Healthy',
-      riskScore: student.riskScore,
-      requiresResponse: true,
-      relatedSignals: student.signals || []
-    });
-
-    const updated = getStoredMessages().filter(m => m.studentId === student.id || m.studentName === student.name);
-    setStudentMessages(updated);
+  const handleNudgeSent = async (_id, message) => {
+    try {
+      await fetch('/api/nudges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: student.id,
+          content: message,
+          subject: 'Educator Nudge: Checking in on your progress',
+          type: 'Check-in',
+          requiresResponse: true,
+        }),
+      });
+      // Re-fetch nudges to update history
+      const res = await fetch(`/api/nudges?studentId=${student.id}`);
+      if (res.ok) setStudentMessages(await res.json());
+    } catch (err) {
+      console.error('Failed to persist nudge:', err);
+    }
     showToast(`Nudge sent successfully to ${student.name}.`);
   };
 

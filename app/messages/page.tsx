@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import MessagesHeader from '@/components/messages/MessagesHeader';
 import MessagesFilterBar from '@/components/messages/MessagesFilterBar';
@@ -16,20 +16,15 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { 
-  getStoredMessages, 
-  createMessages, 
-  getSummaryMetrics 
-} from '@/services/messageService';
 import { MOCK_STUDENTS } from '@/data/mockStudents';
 
 export default function MessagesPage() {
   const { logout } = useAuth();
   const router = useRouter();
 
-  const [students, setStudents] = useState(MOCK_STUDENTS);
+  const [students, setStudents] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('All Batches');
-  const [allMessages, setAllMessages] = useState(() => getStoredMessages());
+  const [allMessages, setAllMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All Types');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
@@ -39,6 +34,24 @@ export default function MessagesPage() {
   const [selectedDateRange, setSelectedDateRange] = useState('All Time');
   const [activeQuickFilter, setActiveQuickFilter] = useState('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const res = await fetch('/api/nudges');
+      if (res.ok) setAllMessages(await res.json());
+    } catch (err) {
+      console.error('Messages fetch error:', err);
+    }
+  }, []);
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/students');
+      if (res.ok) setStudents(await res.json());
+    } catch (err) {
+      console.error('Students fetch error:', err);
+    }
+  }, []);
 
   // Modal / Drawer state
   const [selectedMessageForDetail, setSelectedMessageForDetail] = useState(null);
@@ -57,10 +70,11 @@ export default function MessagesPage() {
     }, 3500);
   };
 
-  // Re-fetch messages from storage on mount
+  // Fetch on mount
   useEffect(() => {
-    setAllMessages(getStoredMessages());
-  }, []);
+    fetchMessages();
+    fetchStudents();
+  }, [fetchMessages, fetchStudents]);
 
   const handleTabChange = (tab) => {
     if (tab === 'Overview' || tab === 'Risk Signals' || tab === 'Activity' || tab === 'Reports') {
@@ -70,12 +84,18 @@ export default function MessagesPage() {
     }
   };
 
-  // Compute dynamic summary metrics based on current batch
   const summaryMetrics = useMemo(() => {
     const batchMessages = selectedBatch === 'All Batches'
       ? allMessages
-      : allMessages.filter(m => m.batch === selectedBatch);
-    return getSummaryMetrics(batchMessages);
+      : allMessages.filter((m) => m.batch === selectedBatch);
+    const totalSent = batchMessages.filter((m) => m.status !== 'Draft' && m.status !== 'Scheduled').length;
+    const delivered = batchMessages.filter((m) => ['Delivered', 'Read', 'Sent'].includes(m.status)).length;
+    const read = batchMessages.filter((m) => m.status === 'Read').length;
+    const awaitingResponse = batchMessages.filter((m) => m.responseStatus === 'Awaiting Response').length;
+    const followupsDue = batchMessages.filter(
+      (m) => m.type === 'Follow-up' || (m.riskLevel === 'High' && m.responseStatus === 'Awaiting Response')
+    ).length;
+    return { totalSent, delivered, read, awaitingResponse, followupsDue };
   }, [allMessages, selectedBatch]);
 
   // Compute filtered messages
@@ -141,11 +161,10 @@ export default function MessagesPage() {
   // Handlers
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setAllMessages(getStoredMessages());
+    fetchMessages().finally(() => {
       setIsRefreshing(false);
       showToast('Outreach delivery records and responses updated.');
-    }, 500);
+    });
   };
 
   const handleClearFilters = () => {
@@ -167,13 +186,33 @@ export default function MessagesPage() {
     }
   };
 
-  const handleSendMessage = (payloads) => {
-    const created = createMessages(payloads);
-    setAllMessages(getStoredMessages());
-    const count = Array.isArray(created) ? created.length : 1;
+  const handleSendMessage = async (payloads) => {
+    const list = Array.isArray(payloads) ? payloads : [payloads];
+    try {
+      await Promise.all(
+        list.map((p) =>
+          fetch('/api/nudges', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentId: p.studentId,
+              content: p.content,
+              subject: p.subject,
+              type: p.type ?? 'Check-in',
+              requiresResponse: p.requiresResponse ?? true,
+              scheduledFor: p.scheduledFor ?? undefined,
+            }),
+          })
+        )
+      );
+      await fetchMessages();
+    } catch (err) {
+      console.error('Failed to send messages:', err);
+    }
+    const count = list.length;
     showToast(
       count === 1
-        ? `Outreach dispatched successfully to ${created[0].studentName}.`
+        ? `Outreach dispatched successfully to ${list[0].studentName ?? 'student'}.`
         : `Dispatched outreach to ${count} students successfully.`
     );
   };
@@ -183,26 +222,23 @@ export default function MessagesPage() {
     setIsComposerOpen(true);
   };
 
-  const handleNudgeSent = (studentId, message) => {
-    const student = students.find(s => s.id === studentId);
-    if (student) {
-      createMessages({
-        studentId: student.id,
-        studentName: student.name,
-        studentAvatar: student.avatar,
-        studentEmail: student.email,
-        batch: student.batch,
-        type: 'Check-in',
-        subject: 'Educator Nudge: Checking in on your progress',
-        content: message,
-        trigger: 'Manual Educator Nudge',
-        triggerSignalType: 'manual',
-        riskLevel: student.statusCategory === 'HIGH' ? 'High' : student.statusCategory === 'MEDIUM' ? 'Medium' : 'Healthy',
-        riskScore: student.riskScore,
-        requiresResponse: true,
-        relatedSignals: student.signals || []
+  const handleNudgeSent = async (studentId, message) => {
+    const student = students.find((s) => s.id === studentId);
+    try {
+      await fetch('/api/nudges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId,
+          content: message,
+          subject: 'Educator Nudge: Checking in on your progress',
+          type: 'Check-in',
+          requiresResponse: true,
+        }),
       });
-      setAllMessages(getStoredMessages());
+      await fetchMessages();
+    } catch (err) {
+      console.error('Failed to persist nudge:', err);
     }
     showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
   };

@@ -2,11 +2,15 @@
 
 import React from 'react';
 import { ShieldAlert, AlertTriangle, CheckCircle2, ChevronRight, Info } from 'lucide-react';
-import { RISK_DISTRIBUTION_DATA } from '@/data/dashboardMetrics';
-
-export default function RiskDistribution({ onSelectCategory }) {
-  const { healthy, mediumRisk, highRisk } = RISK_DISTRIBUTION_DATA;
-  const total = healthy.count + mediumRisk.count + highRisk.count;
+export default function RiskDistribution({ onSelectCategory, students = [] }) {
+  const healthyCount = students.filter((s) => s.statusCategory === 'HEALTHY').length;
+  const mediumCount = students.filter((s) => s.statusCategory === 'MEDIUM').length;
+  const highCount = students.filter((s) => s.statusCategory === 'HIGH').length;
+  const total = students.length || 1; // prevent division by zero
+  const healthy = { count: healthyCount, percentage: Math.round((healthyCount / total) * 100) };
+  const mediumRisk = { count: mediumCount, percentage: Math.round((mediumCount / total) * 100) };
+  const highRisk = { count: highCount, percentage: Math.round((highCount / total) * 100) };
+  const displayTotal = students.length;
 
   return (
     <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-xs">
@@ -22,7 +26,7 @@ export default function RiskDistribution({ onSelectCategory }) {
           </p>
         </div>
         <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-          {total} Total Students
+          {displayTotal} Total Students
         </span>
       </div>
 
@@ -116,7 +120,7 @@ export default function RiskDistribution({ onSelectCategory }) {
       <div className="mt-4 p-3 bg-rose-50/70 border border-rose-100 rounded-xl flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 text-rose-900 font-medium">
           <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
-          <span><strong>12 students</strong> currently require immediate attention.</span>
+          <span><strong>{highCount} student{highCount !== 1 ? 's' : ''}</strong> currently require immediate attention.</span>
         </div>
         <button
           onClick={() => onSelectCategory && onSelectCategory('HIGH')}

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { RECENT_ACTIVITY_FEED } from '@/data/dashboardMetrics';
 
-export default function RecentActivity({ onViewAllActivity, onSelectStudentActivity }) {
+export default function RecentActivity({ onViewAllActivity, onSelectStudentActivity, activities = RECENT_ACTIVITY_FEED }) {
   const getIcon = (type) => {
     switch (type) {
       case 'risk_change':
@@ -68,7 +68,7 @@ export default function RecentActivity({ onViewAllActivity, onSelectStudentActiv
 
         {/* Activity Feed List */}
         <div className="divide-y divide-slate-100">
-          {RECENT_ACTIVITY_FEED.map((item) => (
+          {activities.map((item) => (
             <div
               key={item.id}
               onClick={() => onSelectStudentActivity && onSelectStudentActivity(item)}

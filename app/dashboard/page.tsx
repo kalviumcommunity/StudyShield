@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import WelcomeHeader from "@/components/layout/WelcomeHeader";
 import MetricCard from "@/components/dashboard/MetricCard";
@@ -24,10 +24,7 @@ import StudentDetailDrawer from "@/components/modals/StudentDetailDrawer";
 import AddStudentModal from "@/components/modals/AddStudentModal";
 import ReportModal from "@/components/modals/ReportModal";
 
-import { MOCK_STUDENTS } from "@/data/mockStudents";
-import { OVERVIEW_METRICS } from "@/data/dashboardMetrics";
 import { CheckCircle2 } from "lucide-react";
-import { createMessages } from "@/services/messageService";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
@@ -42,7 +39,33 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Student dataset state
-  const [students, setStudents] = useState(MOCK_STUDENTS);
+  const [students, setStudents] = useState([]);
+  const [signals, setSignals] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
+  // Fetch all data from the API
+  const fetchAll = useCallback(async () => {
+    setIsDataLoading(true);
+    try {
+      const [studentsRes, signalsRes, activityRes] = await Promise.all([
+        fetch('/api/students'),
+        fetch('/api/dashboard/signals'),
+        fetch('/api/dashboard/activity'),
+      ]);
+      if (studentsRes.ok) setStudents(await studentsRes.json());
+      if (signalsRes.ok) setSignals(await signalsRes.json());
+      if (activityRes.ok) setActivities(await activityRes.json());
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+    } finally {
+      setIsDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   // Modal and Drawer states
   const [selectedStudentForNudge, setSelectedStudentForNudge] = useState(null);
@@ -79,47 +102,54 @@ export default function DashboardPage() {
   // Handlers
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
+    fetchAll().finally(() => {
       setIsRefreshing(false);
-      showToast("Learner signals and R(t) scores updated successfully.");
-    }, 600);
+      showToast('Learner signals and R(t) scores updated successfully.');
+    });
   };
 
-  const handleNudgeSent = (studentId, message) => {
+  const handleNudgeSent = async (studentId, message) => {
     const student = students.find((s) => s.id === studentId);
-    if (student) {
-      createMessages({
-        studentId: student.id,
-        studentName: student.name,
-        studentAvatar: student.avatar,
-        studentEmail: student.email,
-        batch: student.batch,
-        type: "Check-in",
-        subject: "Educator Nudge: Checking in on your progress",
-        content: message,
-        trigger: "Manual Educator Nudge from Overview Queue",
-        triggerSignalType: "manual",
-        riskLevel:
-          student.statusCategory === "HIGH"
-            ? "High"
-            : student.statusCategory === "MEDIUM"
-              ? "Medium"
-              : "Healthy",
-        riskScore: student.riskScore,
-        requiresResponse: true,
-        relatedSignals: student.signals || [],
+    try {
+      await fetch('/api/nudges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId,
+          content: message,
+          subject: 'Educator Nudge: Checking in on your progress',
+          type: 'Check-in',
+          requiresResponse: true,
+        }),
       });
+    } catch (err) {
+      console.error('Failed to persist nudge:', err);
     }
-    showToast(
-      `Nudge sent successfully to ${student ? student.name : "student"}.`,
-    );
+    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
   };
 
-  const handleAddStudent = (newStudent) => {
-    setStudents((currentStudents) => [newStudent, ...currentStudents]);
-    showToast(
-      `Enrolled ${newStudent.name} into StudyShield retention monitor.`,
-    );
+  const handleAddStudent = async (newStudentLocal) => {
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newStudentLocal.name,
+          email: newStudentLocal.email,
+          batchName: newStudentLocal.batch,
+          notes: newStudentLocal.notes ?? null,
+        }),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setStudents((prev) => [saved, ...prev]);
+      } else {
+        setStudents((prev) => [newStudentLocal, ...prev]);
+      }
+    } catch {
+      setStudents((prev) => [newStudentLocal, ...prev]);
+    }
+    showToast(`Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`);
   };
 
   const handleSelectMetricCard = (category) => {
@@ -139,30 +169,23 @@ export default function DashboardPage() {
     }
   };
 
-  // Dynamic Metrics computed based on current batch & student list
   const currentMetrics = useMemo(() => {
     const batchStudents =
-      selectedBatch === "All Batches"
+      selectedBatch === 'All Batches'
         ? students
         : students.filter((s) => s.batch === selectedBatch);
 
     const total = batchStudents.length;
-    const high = batchStudents.filter(
-      (s) => s.statusCategory === "HIGH",
-    ).length;
-    const medium = batchStudents.filter(
-      (s) => s.statusCategory === "MEDIUM",
-    ).length;
-    const healthy = batchStudents.filter(
-      (s) => s.statusCategory === "HEALTHY",
-    ).length;
+    const high = batchStudents.filter((s) => s.statusCategory === 'HIGH').length;
+    const medium = batchStudents.filter((s) => s.statusCategory === 'MEDIUM').length;
+    const healthy = batchStudents.filter((s) => s.statusCategory === 'HEALTHY').length;
     const atRisk = high + medium;
 
     return {
-      totalStudents: total || 248,
-      studentsAtRisk: atRisk || 31,
-      highRisk: high || 12,
-      healthyEngagement: healthy || 205,
+      totalStudents: total || 0,
+      studentsAtRisk: atRisk || 0,
+      highRisk: high || 0,
+      healthyEngagement: healthy || 0,
     };
   }, [students, selectedBatch]);
 
@@ -297,6 +320,7 @@ export default function DashboardPage() {
                   {/* Student Risk Overview (Segmented Bar) */}
                   <RiskDistribution
                     onSelectCategory={(cat) => handleSelectMetricCard(cat)}
+                    students={students}
                   />
 
                   {/* StudyShield Intelligence Insight Card */}
@@ -326,7 +350,7 @@ export default function DashboardPage() {
                   {/* Recent Activity Feed */}
                   <RecentActivity
                     onViewAllActivity={() =>
-                      showToast("Displaying real-time event feed for cohort.")
+                      showToast('Displaying real-time event feed for cohort.')
                     }
                     onSelectStudentActivity={(item) => {
                       const match = students.find(
@@ -334,6 +358,7 @@ export default function DashboardPage() {
                       );
                       if (match) setSelectedStudentForDetail(match);
                     }}
+                    activities={activities}
                   />
                 </div>
               </div>
@@ -341,6 +366,7 @@ export default function DashboardPage() {
               {/* 3. Early Warning Signals Section (4 Cards Grid) */}
               <EarlyWarningSignals
                 onSelectSignal={(filterKey) => handleSignalClick(filterKey)}
+                signals={signals}
               />
             </>
           )}
