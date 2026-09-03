@@ -1,0 +1,203 @@
+import "dotenv/config";
+import { PrismaClient } from "../generated/prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
+
+if (!process.env.DIRECT_URL) {
+  throw new Error("DIRECT_URL is missing. Add your direct Neon URL to .env.");
+}
+
+const adapter = new PrismaNeon({ connectionString: process.env.DIRECT_URL });
+const prisma = new PrismaClient({ adapter });
+
+const firstNames = [
+  "Aarav", "Aditi", "Akash", "Ananya", "Arjun", "Bhavna", "Dev", "Diya",
+  "Ishaan", "Kavya", "Meera", "Neha", "Priya", "Rahul", "Riya", "Rohan",
+  "Saanvi", "Siddharth", "Tanvi", "Vihaan",
+];
+
+const lastNames = [
+  "Sharma", "Verma", "Patel", "Singh", "Mehta", "Gupta", "Kapoor", "Nair",
+  "Reddy", "Iyer",
+];
+
+async function getOrCreateBatch(batchName) {
+  const rows = await prisma.$queryRaw`
+    INSERT INTO batches (batch_name)
+    VALUES (${batchName})
+    ON CONFLICT (batch_name)
+    DO UPDATE SET batch_name = EXCLUDED.batch_name
+    RETURNING batch_id
+  `;
+  return rows[0].batch_id;
+}
+
+async function getOrCreateEducator(fullName, email) {
+  const rows = await prisma.$queryRaw`
+    INSERT INTO educators (full_name, email)
+    VALUES (${fullName}, ${email})
+    ON CONFLICT (email)
+    DO UPDATE SET full_name = EXCLUDED.full_name
+    RETURNING educator_id
+  `;
+  return rows[0].educator_id;
+}
+
+async function getOrCreateQuiz(batchId, title, dueAt) {
+  const existing = await prisma.$queryRaw`
+    SELECT quiz_id
+    FROM quizzes
+    WHERE batch_id = ${batchId} AND title = ${title}
+    LIMIT 1
+  `;
+
+  if (existing.length > 0) return existing[0].quiz_id;
+
+  const rows = await prisma.$queryRaw`
+    INSERT INTO quizzes (batch_id, title, due_at)
+    VALUES (${batchId}, ${title}, ${dueAt})
+    RETURNING quiz_id
+  `;
+  return rows[0].quiz_id;
+}
+
+async function main() {
+  const batchIds = [];
+  for (let index = 1; index <= 15; index += 1) {
+    batchIds.push(await getOrCreateBatch(`Test Batch ${String(index).padStart(2, "0")} - 2026`));
+  }
+
+  const educators = [
+    ["Anurag Sharma", "anurag.test@studyshield.example"],
+    ["Priya Nair", "priya.test@studyshield.example"],
+    ["Vikram Mehta", "vikram.test@studyshield.example"],
+    ["Kavya Iyer", "kavya.test@studyshield.example"],
+  ];
+  const educatorIds = [];
+  for (const [fullName, email] of educators) {
+    educatorIds.push(await getOrCreateEducator(fullName, email));
+  }
+
+  // Two quizzes in every batch: 30 test quizzes in total.
+  const quizIdsByBatch = new Map();
+  for (let batchIndex = 0; batchIndex < batchIds.length; batchIndex += 1) {
+    const batchId = batchIds[batchIndex];
+    const batchNumber = String(batchIndex + 1).padStart(2, "0");
+    const quizOne = await getOrCreateQuiz(
+      batchId,
+      `Test Quiz A - Batch ${batchNumber}`,
+      new Date("2026-09-10T12:00:00Z"),
+    );
+    const quizTwo = await getOrCreateQuiz(
+      batchId,
+      `Test Quiz B - Batch ${batchNumber}`,
+      new Date("2026-09-17T12:00:00Z"),
+    );
+    quizIdsByBatch.set(batchId, [quizOne, quizTwo]);
+  }
+
+  const students = [];
+  for (let index = 1; index <= 100; index += 1) {
+    const firstName = firstNames[(index - 1) % firstNames.length];
+    const lastName = lastNames[Math.floor((index - 1) / firstNames.length) % lastNames.length];
+    const fullName = `${firstName} ${lastName}`;
+    const email = `test.student${String(index).padStart(3, "0")}@studyshield.example`;
+    const initials = `${firstName[0]}${lastName[0]}`;
+    const batchId = batchIds[(index - 1) % batchIds.length];
+    const inactiveDays = index % 12;
+    const lastLoginAt = new Date(Date.now() - inactiveDays * 24 * 60 * 60 * 1000);
+
+    const rows = await prisma.$queryRaw`
+      INSERT INTO students (batch_id, full_name, email, avatar_initials, last_login_at, notes)
+      VALUES (
+        ${batchId}, ${fullName}, ${email}, ${initials}, ${lastLoginAt},
+        ${"Seeded test learner. Safe to delete after development testing."}
+      )
+      ON CONFLICT (email)
+      DO UPDATE SET
+        batch_id = EXCLUDED.batch_id,
+        full_name = EXCLUDED.full_name,
+        avatar_initials = EXCLUDED.avatar_initials,
+        last_login_at = EXCLUDED.last_login_at
+      RETURNING student_id
+    `;
+    const studentId = rows[0].student_id;
+    students.push({ studentId, batchId, fullName, email, inactiveDays });
+
+    // Add one login activity if the test student does not already have one.
+    const activityExists = await prisma.$queryRaw`
+      SELECT activity_id
+      FROM student_activities
+      WHERE student_id = ${studentId} AND activity_type = ${"login"}
+      LIMIT 1
+    `;
+    if (activityExists.length === 0) {
+      await prisma.$executeRaw`
+        INSERT INTO student_activities (student_id, activity_type, occurred_at)
+        VALUES (${studentId}, ${"login"}, ${lastLoginAt})
+      `;
+    }
+
+    // Create/update one attempt, so the risk calculation has quiz data.
+    const [quizOne, quizTwo] = quizIdsByBatch.get(batchId);
+    const quizId = index % 2 === 0 ? quizOne : quizTwo;
+    const isCompleted = index % 3 !== 0;
+    const status = isCompleted ? "completed" : "missed";
+    const score = isCompleted ? 50 + (index % 45) : null;
+    const submittedAt = isCompleted ? lastLoginAt : null;
+
+    await prisma.$executeRaw`
+      INSERT INTO quiz_attempts (quiz_id, student_id, status, score, submitted_at)
+      VALUES (${quizId}, ${studentId}, ${status}, ${score}, ${submittedAt})
+      ON CONFLICT (quiz_id, student_id)
+      DO UPDATE SET
+        status = EXCLUDED.status,
+        score = EXCLUDED.score,
+        submitted_at = EXCLUDED.submitted_at
+    `;
+  }
+
+  // 30 nudges: one each for the first 30 seeded students.
+  for (let index = 0; index < 30; index += 1) {
+    const student = students[index];
+    const educatorId = educatorIds[index % educatorIds.length];
+    const messageType = index % 3 === 0 ? "early_warning" : index % 3 === 1 ? "quiz_reminder" : "check_in";
+    const subject = `Test ${messageType.replace("_", " ")} #${String(index + 1).padStart(2, "0")}`;
+    const existing = await prisma.$queryRaw`
+      SELECT nudge_id
+      FROM nudges
+      WHERE student_id = ${student.studentId} AND subject = ${subject}
+      LIMIT 1
+    `;
+
+    if (existing.length === 0) {
+      await prisma.$executeRaw`
+        INSERT INTO nudges (
+          student_id, educator_id, subject, message, message_type, status,
+          requires_response, sent_at
+        )
+        VALUES (
+          ${student.studentId}, ${educatorId}, ${subject},
+          ${`Hi ${student.fullName}, this is test outreach generated for StudyShield development. Please check your pending learning activity.`},
+          ${messageType}, ${"sent"}, ${index % 2 === 0}, ${new Date()}
+        )
+      `;
+    }
+  }
+
+  console.log("Seed complete:");
+  console.log("- 15 test batches");
+  console.log("- 4 test educators");
+  console.log("- 100 test students");
+  console.log("- 30 test quizzes");
+  console.log("- 100 quiz attempts and login activities");
+  console.log("- 30 test nudges");
+}
+
+main()
+  .catch((error) => {
+    console.error("Seed failed:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
