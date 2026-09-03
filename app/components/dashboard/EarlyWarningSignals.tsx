@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { EARLY_WARNING_SIGNALS } from '@/data/dashboardMetrics';
 
-export default function EarlyWarningSignals({ onSelectSignal }) {
+export default function EarlyWarningSignals({ onSelectSignal, signals = EARLY_WARNING_SIGNALS }) {
   const getIcon = (iconName) => {
     switch (iconName) {
       case 'Clock':
@@ -63,7 +63,7 @@ export default function EarlyWarningSignals({ onSelectSignal }) {
 
       {/* 4 Warning Signal Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {EARLY_WARNING_SIGNALS.map((signal) => {
+        {signals.map((signal) => {
           const style = getBgStyle(signal.severity);
 
           return (

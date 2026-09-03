@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import StudentsNeedingAttention from "@/components/dashboard/StudentsNeedingAttention";
 import StudentDetailDrawer from "@/components/modals/StudentDetailDrawer";
@@ -8,8 +8,6 @@ import NudgeModal from "@/components/modals/NudgeModal";
 import AddStudentModal from "@/components/modals/AddStudentModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthContext";
-import { MOCK_STUDENTS } from "@/data/mockStudents";
-import { createMessages } from "@/services/messageService";
 import { CheckCircle2, UserPlus, Users, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -17,14 +15,26 @@ export default function StudentsPage() {
   const { logout } = useAuth();
   const router = useRouter();
 
-  const [students, setStudents] = useState(MOCK_STUDENTS);
-  const [selectedBatch, setSelectedBatch] = useState("All Batches");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudentForDetail, setSelectedStudentForDetail] =
-    useState(null);
+  const [students, setStudents] = useState([]);
+  const [selectedBatch, setSelectedBatch] = useState('All Batches');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStudentForDetail, setSelectedStudentForDetail] = useState(null);
   const [selectedStudentForNudge, setSelectedStudentForNudge] = useState(null);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/students');
+      if (res.ok) setStudents(await res.json());
+    } catch (err) {
+      console.error('Students page fetch error:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -46,41 +56,48 @@ export default function StudentsPage() {
     }
   };
 
-  const handleNudgeSent = (studentId, message) => {
+  const handleNudgeSent = async (studentId, message) => {
     const student = students.find((s) => s.id === studentId);
-    if (student) {
-      createMessages({
-        studentId: student.id,
-        studentName: student.name,
-        studentAvatar: student.avatar,
-        studentEmail: student.email,
-        batch: student.batch,
-        type: "Check-in",
-        subject: "Educator Nudge: Checking in on your progress",
-        content: message,
-        trigger: "Manual Educator Outreach from Student Directory",
-        triggerSignalType: "manual",
-        riskLevel:
-          student.statusCategory === "HIGH"
-            ? "High"
-            : student.statusCategory === "MEDIUM"
-              ? "Medium"
-              : "Healthy",
-        riskScore: student.riskScore,
-        requiresResponse: true,
-        relatedSignals: student.signals || [],
+    try {
+      await fetch('/api/nudges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId,
+          content: message,
+          subject: 'Educator Nudge: Checking in on your progress',
+          type: 'Check-in',
+          requiresResponse: true,
+        }),
       });
+    } catch (err) {
+      console.error('Failed to persist nudge:', err);
     }
-    showToast(
-      `Nudge sent successfully to ${student ? student.name : "student"}.`,
-    );
+    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
   };
 
-  const handleAddStudent = (newStudent) => {
-    setStudents((currentStudents) => [newStudent, ...currentStudents]);
-    showToast(
-      `Enrolled ${newStudent.name} into StudyShield retention monitor.`,
-    );
+  const handleAddStudent = async (newStudentLocal) => {
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newStudentLocal.name,
+          email: newStudentLocal.email,
+          batchName: newStudentLocal.batch,
+          notes: newStudentLocal.notes ?? null,
+        }),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setStudents((prev) => [saved, ...prev]);
+      } else {
+        setStudents((prev) => [newStudentLocal, ...prev]);
+      }
+    } catch {
+      setStudents((prev) => [newStudentLocal, ...prev]);
+    }
+    showToast(`Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`);
   };
 
   return (
