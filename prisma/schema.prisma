@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model batches {
+  batch_id   Int        @id @default(autoincrement())
+  batch_name String     @unique @db.VarChar(150)
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  quizzes    quizzes[]
+  students   students[]
+}
+
+model educators {
+  educator_id Int      @id @default(autoincrement())
+  full_name   String   @db.VarChar(100)
+  email       String   @unique @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  nudges      nudges[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model nudges {
+  nudge_id          Int        @id @default(autoincrement())
+  student_id        Int
+  educator_id       Int?
+  subject           String?    @db.VarChar(250)
+  message           String
+  message_type      String     @default("check_in") @db.VarChar(30)
+  status            String     @default("sent") @db.VarChar(20)
+  requires_response Boolean    @default(true)
+  student_response  String?
+  responded_at      DateTime?  @db.Timestamptz(6)
+  scheduled_for     DateTime?  @db.Timestamptz(6)
+  sent_at           DateTime?  @db.Timestamptz(6)
+  delivered_at      DateTime?  @db.Timestamptz(6)
+  read_at           DateTime?  @db.Timestamptz(6)
+  created_at        DateTime   @default(now()) @db.Timestamptz(6)
+  educators         educators? @relation(fields: [educator_id], references: [educator_id], onDelete: NoAction, onUpdate: NoAction)
+  students          students   @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model quiz_attempts {
+  attempt_id   Int       @id @default(autoincrement())
+  quiz_id      Int
+  student_id   Int
+  status       String    @default("assigned") @db.VarChar(15)
+  score        Decimal?  @db.Decimal(5, 2)
+  submitted_at DateTime? @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  quizzes      quizzes   @relation(fields: [quiz_id], references: [quiz_id], onDelete: NoAction, onUpdate: NoAction)
+  students     students  @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([quiz_id, student_id])
+  @@index([student_id], map: "idx_quiz_attempts_student")
+}
+
+model quizzes {
+  quiz_id       Int             @id @default(autoincrement())
+  batch_id      Int
+  title         String          @db.VarChar(200)
+  due_at        DateTime?       @db.Timestamptz(6)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  quiz_attempts quiz_attempts[]
+  batches       batches         @relation(fields: [batch_id], references: [batch_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([batch_id], map: "idx_quizzes_batch")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model student_activities {
+  activity_id   Int      @id @default(autoincrement())
+  student_id    Int
+  activity_type String   @db.VarChar(30)
+  occurred_at   DateTime @default(now()) @db.Timestamptz(6)
+  details       Json?
+  students      students @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([student_id, occurred_at(sort: Desc)], map: "idx_student_activities_student_time")
+}
+
+model students {
+  student_id         Int                  @id @default(autoincrement())
+  batch_id           Int
+  full_name          String               @db.VarChar(100)
+  email              String               @unique @db.VarChar(255)
+  avatar_initials    String?              @db.VarChar(5)
+  last_login_at      DateTime?            @db.Timestamptz(6)
+  notes              String?
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  nudges             nudges[]
+  quiz_attempts      quiz_attempts[]
+  student_activities student_activities[]
+  batches            batches              @relation(fields: [batch_id], references: [batch_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([batch_id], map: "idx_students_batch")
+}

@@ -34,6 +34,6 @@
     "**/*.js",
     "**/*.jsx",
     ".next/dev/types/**/*.ts"
-  ],
+, "prisma/schema.prisma"  ],
   "exclude": ["node_modules", "src"]
 }
