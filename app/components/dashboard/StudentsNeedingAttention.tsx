@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   AlertCircle, 
   Clock, 
   HelpCircle, 
   TrendingDown, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft,
   Search, 
   Filter, 
   Mail, 
@@ -24,11 +25,13 @@ export default function StudentsNeedingAttention({
   onReviewStudent,
   onToggleMonitor,
   selectedBatch,
-  initialRiskFilter = 'ALL'
+  initialRiskFilter = 'ALL',
+  pageSize = null
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [riskFilter, setRiskFilter] = useState(initialRiskFilter); // ALL, HIGH, MEDIUM, HEALTHY
   const [sortBy, setSortBy] = useState('riskDesc'); // riskDesc, inactiveDesc, quizAsc
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filter and sort students
   const filteredStudents = useMemo(() => {
@@ -60,6 +63,19 @@ export default function StudentsNeedingAttention({
       return 0;
     });
   }, [students, selectedBatch, riskFilter, searchQuery, sortBy]);
+
+  const totalPages = pageSize ? Math.max(1, Math.ceil(filteredStudents.length / pageSize)) : 1;
+  const visibleStudents = pageSize
+    ? filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    : filteredStudents;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBatch, riskFilter, searchQuery, sortBy, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   const getSignalIcon = (type) => {
     switch (type) {
@@ -221,7 +237,7 @@ export default function StudentsNeedingAttention({
         <>
           {/* Mobile Card List (md:hidden) */}
           <div className="md:hidden divide-y divide-slate-100">
-            {filteredStudents.map((student) => {
+            {visibleStudents.map((student) => {
               const category = getRiskCategory(student.riskScore);
               const isHighRisk = student.statusCategory === 'HIGH';
 
@@ -321,7 +337,7 @@ export default function StudentsNeedingAttention({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
-                {filteredStudents.map((student) => {
+                {visibleStudents.map((student) => {
                   const category = getRiskCategory(student.riskScore);
                   const isHighRisk = student.statusCategory === 'HIGH';
 
@@ -429,9 +445,38 @@ export default function StudentsNeedingAttention({
       {/* Table Footer Summary */}
       <div className="p-3.5 sm:p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <span>
-          Showing <strong className="text-slate-800">{filteredStudents.length}</strong> of{' '}
-          <strong className="text-slate-800">{students.length}</strong> students
+          Showing{' '}
+          <strong className="text-slate-800">
+            {filteredStudents.length === 0 ? 0 : (currentPage - 1) * (pageSize || filteredStudents.length) + 1}
+            {pageSize && filteredStudents.length > 0 ? `-${Math.min(currentPage * pageSize, filteredStudents.length)}` : ''}
+          </strong>{' '}
+          of <strong className="text-slate-800">{filteredStudents.length}</strong> matching students
         </span>
+        {pageSize && totalPages > 1 && (
+          <div className="flex items-center gap-2" aria-label="Student list pagination">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page - 1)}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-[11px] font-semibold text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
             <Sparkles className="w-3 h-3 text-emerald-500" />
