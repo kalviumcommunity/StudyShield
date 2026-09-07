@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { 
   ShieldAlert, 
-  Search, 
   Bell, 
   ChevronDown, 
   User, 
@@ -114,23 +113,8 @@ export default function Navbar({
             </nav>
           </div>
 
-          {/* Right Controls: Search, Notifications, Educator Profile */}
-          <div className="flex items-center gap-3">
-            
-            {/* Quick Search */}
-            <div className="relative hidden lg:block w-64">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Search className="w-4 h-4" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery || ''}
-                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                placeholder="Search students, batches..."
-                className="w-full pl-9 pr-3.5 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
-              />
-            </div>
-
+          {/* Right Controls: Notifications, Educator Profile, Mobile Menu */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Notifications Dropdown */}
             <div className="relative">
               <button
@@ -303,15 +287,6 @@ export default function Navbar({
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 py-3 space-y-1">
-            <div className="px-2 pb-2">
-              <input
-                type="text"
-                value={searchQuery || ''}
-                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                placeholder="Search students, batches..."
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400"
-              />
-            </div>
             {navItems.map((item) => (
               <button
                 key={item.name}
