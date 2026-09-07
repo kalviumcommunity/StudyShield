@@ -291,6 +291,7 @@ export default function DashboardPage() {
                   {/* Students Table / Queue */}
                   <StudentsNeedingAttention
                     students={students}
+                    pageSize={10}
                     selectedBatch={selectedBatch}
                     initialRiskFilter={riskFilterOverride}
                     onReachOut={(student) =>
