@@ -68,10 +68,10 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-4">
           
           {/* Left: StudyShield Logo & Brand */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center shrink-0 sm:min-w-[190px] lg:min-w-[220px]">
             <div 
               onClick={() => handleNavClick('Overview', '/dashboard')} 
               className="flex items-center gap-2.5 cursor-pointer group select-none"
@@ -88,33 +88,33 @@ export default function Navbar({
                 </span>
               </div>
             </div>
-
-            {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-slate-200" aria-label="Main Navigation">
-              {navItems.map((item) => {
-                const isActive = activeTab === item.name || (item.name === 'Messages' && (activeTab === 'Messages & Outreach' || activeTab === 'Messages'));
-                return (
-                  <button
-                    key={item.name}
-                    onClick={() => handleNavClick(item.name, item.href)}
-                    className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
-                      isActive
-                        ? 'text-emerald-700 bg-emerald-50/90 font-semibold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                    }`}
-                  >
-                    {item.label || item.name}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-emerald-600 rounded-full" />
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
           </div>
 
+          {/* Center: Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center justify-center space-x-1 lg:space-x-1.5 flex-1 px-2" aria-label="Main Navigation">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.name || (item.name === 'Messages' && (activeTab === 'Messages & Outreach' || activeTab === 'Messages'));
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavClick(item.name, item.href)}
+                  className={`px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all duration-150 relative whitespace-nowrap ${
+                    isActive
+                      ? 'text-emerald-700 bg-emerald-50/90 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                  }`}
+                >
+                  {item.label || item.name}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-3 right-3 lg:left-3.5 lg:right-3.5 h-0.5 bg-emerald-600 rounded-full" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
           {/* Right Controls: Notifications, Educator Profile, Mobile Menu */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center justify-end gap-2 sm:gap-3 shrink-0 sm:min-w-[190px] lg:min-w-[220px]">
             {/* Notifications Dropdown */}
             <div className="relative">
               <button
