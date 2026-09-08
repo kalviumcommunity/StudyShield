@@ -16,19 +16,20 @@ export default function StudentsPage() {
   const router = useRouter();
 
   const [students, setStudents] = useState([]);
-  const [selectedBatch, setSelectedBatch] = useState('All Batches');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudentForDetail, setSelectedStudentForDetail] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState("All Batches");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStudentForDetail, setSelectedStudentForDetail] =
+    useState(null);
   const [selectedStudentForNudge, setSelectedStudentForNudge] = useState(null);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const fetchStudents = useCallback(async () => {
     try {
-      const res = await fetch('/api/students');
+      const res = await fetch("/api/students");
       if (res.ok) setStudents(await res.json());
     } catch (err) {
-      console.error('Students page fetch error:', err);
+      console.error("Students page fetch error:", err);
     }
   }, []);
 
@@ -59,28 +60,30 @@ export default function StudentsPage() {
   const handleNudgeSent = async (studentId, message) => {
     const student = students.find((s) => s.id === studentId);
     try {
-      await fetch('/api/nudges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/nudges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId,
           content: message,
-          subject: 'Educator Nudge: Checking in on your progress',
-          type: 'Check-in',
+          subject: "Educator Nudge: Checking in on your progress",
+          type: "Check-in",
           requiresResponse: true,
         }),
       });
     } catch (err) {
-      console.error('Failed to persist nudge:', err);
+      console.error("Failed to persist nudge:", err);
     }
-    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
+    showToast(
+      `Nudge sent successfully to ${student ? student.name : "student"}.`,
+    );
   };
 
   const handleAddStudent = async (newStudentLocal) => {
     try {
-      const res = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newStudentLocal.name,
           email: newStudentLocal.email,
@@ -97,7 +100,9 @@ export default function StudentsPage() {
     } catch {
       setStudents((prev) => [newStudentLocal, ...prev]);
     }
-    showToast(`Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`);
+    showToast(
+      `Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`,
+    );
   };
 
   return (
@@ -158,6 +163,7 @@ export default function StudentsPage() {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           <StudentsNeedingAttention
             students={students}
+            pageSize={10}
             selectedBatch={selectedBatch}
             initialRiskFilter="ALL"
             onReachOut={(student) => setSelectedStudentForNudge(student)}
