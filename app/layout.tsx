@@ -1,6 +1,25 @@
 import type { Metadata } from "next";
+import { DM_Sans, Plus_Jakarta_Sans, Manrope } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import "./globals.css";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta-sans",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "StudyShield | Early support for every learner",
@@ -13,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased font-sans">
+    <html lang="en" className={`${dmSans.variable} ${plusJakartaSans.variable} ${manrope.variable}`}>
+      <body className={`${dmSans.className} antialiased font-sans`}>
         <AuthProvider>
           {children}
         </AuthProvider>
