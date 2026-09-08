@@ -18,11 +18,13 @@ import {
 } from "@/components/dashboard/StateViews";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthContext";
+import dynamic from "next/dynamic";
+import { cachedFetch, invalidateCache } from "@/lib/cache";
 
-import NudgeModal from "@/components/modals/NudgeModal";
-import StudentDetailDrawer from "@/components/modals/StudentDetailDrawer";
-import AddStudentModal from "@/components/modals/AddStudentModal";
-import ReportModal from "@/components/modals/ReportModal";
+const NudgeModal = dynamic(() => import("@/components/modals/NudgeModal"), { ssr: false });
+const StudentDetailDrawer = dynamic(() => import("@/components/modals/StudentDetailDrawer"), { ssr: false });
+const AddStudentModal = dynamic(() => import("@/components/modals/AddStudentModal"), { ssr: false });
+const ReportModal = dynamic(() => import("@/components/modals/ReportModal"), { ssr: false });
 
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -45,17 +47,21 @@ export default function DashboardPage() {
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   // Fetch all data from the API
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (force = false) => {
     setIsDataLoading(true);
+    if (force) {
+      invalidateCache('/api/students');
+      invalidateCache('/api/dashboard');
+    }
     try {
-      const [studentsRes, signalsRes, activityRes] = await Promise.all([
-        fetch('/api/students'),
-        fetch('/api/dashboard/signals'),
-        fetch('/api/dashboard/activity'),
+      const [studentsData, signalsData, activityData] = await Promise.all([
+        cachedFetch('/api/students'),
+        cachedFetch('/api/dashboard/signals'),
+        cachedFetch('/api/dashboard/activity'),
       ]);
-      if (studentsRes.ok) setStudents(await studentsRes.json());
-      if (signalsRes.ok) setSignals(await signalsRes.json());
-      if (activityRes.ok) setActivities(await activityRes.json());
+      if (studentsData) setStudents(studentsData);
+      if (signalsData) setSignals(signalsData);
+      if (activityData) setActivities(activityData);
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -102,7 +108,7 @@ export default function DashboardPage() {
   // Handlers
   const handleRefresh = () => {
     setIsRefreshing(true);
-    fetchAll().finally(() => {
+    fetchAll(true).finally(() => {
       setIsRefreshing(false);
       showToast('Learner signals and R(t) scores updated successfully.');
     });
@@ -122,6 +128,8 @@ export default function DashboardPage() {
           requiresResponse: true,
         }),
       });
+      invalidateCache('/api/nudges');
+      invalidateCache('/api/students');
     } catch (err) {
       console.error('Failed to persist nudge:', err);
     }
@@ -140,6 +148,8 @@ export default function DashboardPage() {
           notes: newStudentLocal.notes ?? null,
         }),
       });
+      invalidateCache('/api/students');
+      invalidateCache('/api/dashboard');
       if (res.ok) {
         const saved = await res.json();
         setStudents((prev) => [saved, ...prev]);

@@ -36,6 +36,13 @@ export default function Navbar({
   const auth = useAuth();
   const router = useRouter();
 
+  React.useEffect(() => {
+    // Prefetch main routes so tab navigation is instant
+    router.prefetch('/dashboard');
+    router.prefetch('/students');
+    router.prefetch('/messages');
+  }, [router]);
+
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
@@ -98,6 +105,9 @@ export default function Navbar({
                 <button
                   key={item.name}
                   onClick={() => handleNavClick(item.name, item.href)}
+                  onMouseEnter={() => {
+                    if (item.href) router.prefetch(item.href);
+                  }}
                   className={`px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all duration-150 relative whitespace-nowrap ${
                     isActive
                       ? 'text-emerald-700 bg-emerald-50/90 font-semibold'

@@ -57,7 +57,11 @@ export async function GET() {
       details: `${a.students.full_name} — ${a.activity_type.replace('_', ' ')}`,
     }));
 
-    return NextResponse.json(shaped);
+    return NextResponse.json(shaped, {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('[GET /api/dashboard/activity] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 });

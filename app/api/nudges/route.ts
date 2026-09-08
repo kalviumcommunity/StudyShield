@@ -126,7 +126,11 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(shaped);
+    return NextResponse.json(shaped, {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('[GET /api/nudges] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch nudges' }, { status: 500 });

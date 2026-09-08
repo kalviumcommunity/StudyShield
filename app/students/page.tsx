@@ -3,9 +3,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import StudentsNeedingAttention from "@/components/dashboard/StudentsNeedingAttention";
-import StudentDetailDrawer from "@/components/modals/StudentDetailDrawer";
-import NudgeModal from "@/components/modals/NudgeModal";
-import AddStudentModal from "@/components/modals/AddStudentModal";
+import dynamic from "next/dynamic";
+import { cachedFetch, invalidateCache } from "@/lib/cache";
+
+const StudentDetailDrawer = dynamic(() => import("@/components/modals/StudentDetailDrawer"), { ssr: false });
+const NudgeModal = dynamic(() => import("@/components/modals/NudgeModal"), { ssr: false });
+const AddStudentModal = dynamic(() => import("@/components/modals/AddStudentModal"), { ssr: false });
+
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthContext";
 import { CheckCircle2, UserPlus, Users, Sparkles } from "lucide-react";
@@ -24,10 +28,13 @@ export default function StudentsPage() {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (force = false) => {
+    if (force) {
+      invalidateCache('/api/students');
+    }
     try {
-      const res = await fetch("/api/students");
-      if (res.ok) setStudents(await res.json());
+      const data = await cachedFetch('/api/students');
+      if (data) setStudents(data);
     } catch (err) {
       console.error("Students page fetch error:", err);
     }
@@ -71,6 +78,8 @@ export default function StudentsPage() {
           requiresResponse: true,
         }),
       });
+      invalidateCache('/api/nudges');
+      invalidateCache('/api/students');
     } catch (err) {
       console.error("Failed to persist nudge:", err);
     }
@@ -91,6 +100,8 @@ export default function StudentsPage() {
           notes: newStudentLocal.notes ?? null,
         }),
       });
+      invalidateCache('/api/students');
+      invalidateCache('/api/dashboard');
       if (res.ok) {
         const saved = await res.json();
         setStudents((prev) => [saved, ...prev]);

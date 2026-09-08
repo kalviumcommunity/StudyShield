@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { TrendingDown, ArrowRight, Activity, Calendar } from 'lucide-react';
 import { ENGAGEMENT_TREND_DATA } from '@/data/dashboardMetrics';
 
@@ -17,25 +17,29 @@ export default function EngagementTrend({ onViewActivityDetails }) {
   const minVal = 70;
   const maxVal = 90;
 
-  // Calculate points
-  const points = ENGAGEMENT_TREND_DATA.map((d, i) => {
-    const x = paddingX + (i * (width - 2 * paddingX)) / (ENGAGEMENT_TREND_DATA.length - 1);
-    const y = height - paddingBottom - ((d.engagementRate - minVal) / (maxVal - minVal)) * (height - paddingTop - paddingBottom);
-    return { ...d, x, y };
-  });
+  // Memoize points and SVG paths so hovering does not trigger curve recalculations
+  const { points, pathD, areaD } = useMemo(() => {
+    const calculatedPoints = ENGAGEMENT_TREND_DATA.map((d, i) => {
+      const x = paddingX + (i * (width - 2 * paddingX)) / (ENGAGEMENT_TREND_DATA.length - 1);
+      const y = height - paddingBottom - ((d.engagementRate - minVal) / (maxVal - minVal)) * (height - paddingTop - paddingBottom);
+      return { ...d, x, y };
+    });
 
-  const pathD = points.reduce((acc, p, i) => {
-    if (i === 0) return `M ${p.x} ${p.y}`;
-    // Smooth bezier curve
-    const prev = points[i - 1];
-    const cx1 = prev.x + (p.x - prev.x) / 2;
-    const cy1 = prev.y;
-    const cx2 = prev.x + (p.x - prev.x) / 2;
-    const cy2 = p.y;
-    return `${acc} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p.x} ${p.y}`;
-  }, '');
+    const calculatedPathD = calculatedPoints.reduce((acc, p, i) => {
+      if (i === 0) return `M ${p.x} ${p.y}`;
+      // Smooth bezier curve
+      const prev = calculatedPoints[i - 1];
+      const cx1 = prev.x + (p.x - prev.x) / 2;
+      const cy1 = prev.y;
+      const cx2 = prev.x + (p.x - prev.x) / 2;
+      const cy2 = p.y;
+      return `${acc} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p.x} ${p.y}`;
+    }, '');
 
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
+    const calculatedAreaD = `${calculatedPathD} L ${calculatedPoints[calculatedPoints.length - 1].x} ${height - paddingBottom} L ${calculatedPoints[0].x} ${height - paddingBottom} Z`;
+
+    return { points: calculatedPoints, pathD: calculatedPathD, areaD: calculatedAreaD };
+  }, []);
 
   return (
     <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between">
