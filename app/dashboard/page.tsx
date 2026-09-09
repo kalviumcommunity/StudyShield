@@ -21,10 +21,20 @@ import { useAuth } from "@/components/auth/AuthContext";
 import dynamic from "next/dynamic";
 import { cachedFetch, invalidateCache } from "@/lib/cache";
 
-const NudgeModal = dynamic(() => import("@/components/modals/NudgeModal"), { ssr: false });
-const StudentDetailDrawer = dynamic(() => import("@/components/modals/StudentDetailDrawer"), { ssr: false });
-const AddStudentModal = dynamic(() => import("@/components/modals/AddStudentModal"), { ssr: false });
-const ReportModal = dynamic(() => import("@/components/modals/ReportModal"), { ssr: false });
+const NudgeModal = dynamic(() => import("@/components/modals/NudgeModal"), {
+  ssr: false,
+});
+const StudentDetailDrawer = dynamic(
+  () => import("@/components/modals/StudentDetailDrawer"),
+  { ssr: false },
+);
+const AddStudentModal = dynamic(
+  () => import("@/components/modals/AddStudentModal"),
+  { ssr: false },
+);
+const ReportModal = dynamic(() => import("@/components/modals/ReportModal"), {
+  ssr: false,
+});
 
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -50,20 +60,20 @@ export default function DashboardPage() {
   const fetchAll = useCallback(async (force = false) => {
     setIsDataLoading(true);
     if (force) {
-      invalidateCache('/api/students');
-      invalidateCache('/api/dashboard');
+      invalidateCache("/api/students");
+      invalidateCache("/api/dashboard");
     }
     try {
       const [studentsData, signalsData, activityData] = await Promise.all([
-        cachedFetch('/api/students'),
-        cachedFetch('/api/dashboard/signals'),
-        cachedFetch('/api/dashboard/activity'),
+        cachedFetch("/api/students"),
+        cachedFetch("/api/dashboard/signals"),
+        cachedFetch("/api/dashboard/activity"),
       ]);
       if (studentsData) setStudents(studentsData);
       if (signalsData) setSignals(signalsData);
       if (activityData) setActivities(activityData);
     } catch (err) {
-      console.error('Dashboard fetch error:', err);
+      console.error("Dashboard fetch error:", err);
     } finally {
       setIsDataLoading(false);
     }
@@ -99,6 +109,8 @@ export default function DashboardPage() {
       router.push("/messages");
     } else if (tab === "Students") {
       router.push("/students");
+    } else if (tab === "Reports") {
+      router.push("/reports");
     } else if (tab === "Risk Signals") {
       const el = document.getElementById("students-attention-heading");
       if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -110,37 +122,39 @@ export default function DashboardPage() {
     setIsRefreshing(true);
     fetchAll(true).finally(() => {
       setIsRefreshing(false);
-      showToast('Learner signals and R(t) scores updated successfully.');
+      showToast("Learner signals and R(t) scores updated successfully.");
     });
   };
 
   const handleNudgeSent = async (studentId, message) => {
     const student = students.find((s) => s.id === studentId);
     try {
-      await fetch('/api/nudges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/nudges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId,
           content: message,
-          subject: 'Educator Nudge: Checking in on your progress',
-          type: 'Check-in',
+          subject: "Educator Nudge: Checking in on your progress",
+          type: "Check-in",
           requiresResponse: true,
         }),
       });
-      invalidateCache('/api/nudges');
-      invalidateCache('/api/students');
+      invalidateCache("/api/nudges");
+      invalidateCache("/api/students");
     } catch (err) {
-      console.error('Failed to persist nudge:', err);
+      console.error("Failed to persist nudge:", err);
     }
-    showToast(`Nudge sent successfully to ${student ? student.name : 'student'}.`);
+    showToast(
+      `Nudge sent successfully to ${student ? student.name : "student"}.`,
+    );
   };
 
   const handleAddStudent = async (newStudentLocal) => {
     try {
-      const res = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newStudentLocal.name,
           email: newStudentLocal.email,
@@ -148,8 +162,8 @@ export default function DashboardPage() {
           notes: newStudentLocal.notes ?? null,
         }),
       });
-      invalidateCache('/api/students');
-      invalidateCache('/api/dashboard');
+      invalidateCache("/api/students");
+      invalidateCache("/api/dashboard");
       if (res.ok) {
         const saved = await res.json();
         setStudents((prev) => [saved, ...prev]);
@@ -159,7 +173,9 @@ export default function DashboardPage() {
     } catch {
       setStudents((prev) => [newStudentLocal, ...prev]);
     }
-    showToast(`Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`);
+    showToast(
+      `Enrolled ${newStudentLocal.name} into StudyShield retention monitor.`,
+    );
   };
 
   const handleSelectMetricCard = (category) => {
@@ -181,14 +197,20 @@ export default function DashboardPage() {
 
   const currentMetrics = useMemo(() => {
     const batchStudents =
-      selectedBatch === 'All Batches'
+      selectedBatch === "All Batches"
         ? students
         : students.filter((s) => s.batch === selectedBatch);
 
     const total = batchStudents.length;
-    const high = batchStudents.filter((s) => s.statusCategory === 'HIGH').length;
-    const medium = batchStudents.filter((s) => s.statusCategory === 'MEDIUM').length;
-    const healthy = batchStudents.filter((s) => s.statusCategory === 'HEALTHY').length;
+    const high = batchStudents.filter(
+      (s) => s.statusCategory === "HIGH",
+    ).length;
+    const medium = batchStudents.filter(
+      (s) => s.statusCategory === "MEDIUM",
+    ).length;
+    const healthy = batchStudents.filter(
+      (s) => s.statusCategory === "HEALTHY",
+    ).length;
     const atRisk = high + medium;
 
     return {
@@ -361,7 +383,7 @@ export default function DashboardPage() {
                   {/* Recent Activity Feed */}
                   <RecentActivity
                     onViewAllActivity={() =>
-                      showToast('Displaying real-time event feed for cohort.')
+                      showToast("Displaying real-time event feed for cohort.")
                     }
                     onSelectStudentActivity={(item) => {
                       const match = students.find(
