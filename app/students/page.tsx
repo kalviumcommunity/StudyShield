@@ -54,11 +54,12 @@ export default function StudentsPage() {
   const handleTabChange = (tab) => {
     if (
       tab === "Overview" ||
-      tab === "Risk Signals" ||
       tab === "Activity" ||
       tab === "Reports"
     ) {
       router.push("/dashboard");
+    } else if (tab === "Risk Signals") {
+      router.push("/risk-signals");
     } else if (tab === "Messages" || tab === "Messages & Outreach") {
       router.push("/messages");
     }

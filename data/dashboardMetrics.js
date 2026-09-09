@@ -77,6 +77,8 @@ export const EARLY_WARNING_SIGNALS = [
   {
     id: 'sig-inactivity',
     title: 'Inactive for 7+ days',
+    description: 'No recent login activity. Extended inactivity adds to the risk score.',
+    action: 'Send a reconnect nudge',
     count: 18,
     unit: 'students',
     trend: '↑ 4 students this week',
@@ -87,7 +89,9 @@ export const EARLY_WARNING_SIGNALS = [
   },
   {
     id: 'sig-quiz',
-    title: 'Quiz completion declining',
+    title: 'Missed or incomplete quizzes',
+    description: 'Less than half of assigned quizzes are completed, reducing learning momentum.',
+    action: 'Remind students about pending quizzes',
     count: 23,
     unit: 'students',
     trend: '↑ 7 students this week',
@@ -98,7 +102,9 @@ export const EARLY_WARNING_SIGNALS = [
   },
   {
     id: 'sig-login',
-    title: 'Login activity dropping',
+    title: 'No login in 3+ days',
+    description: 'A recent activity gap can be an early sign that a student is disengaging.',
+    action: 'Check in before the gap grows',
     count: 16,
     unit: 'students',
     trend: '↑ 3 students this week',
@@ -106,17 +112,6 @@ export const EARLY_WARNING_SIGNALS = [
     severity: 'medium',
     icon: 'LogIn',
     filterKey: 'login'
-  },
-  {
-    id: 'sig-assessment',
-    title: 'Assessment performance declining',
-    count: 11,
-    unit: 'students',
-    trend: '↑ 2 students this week',
-    trendDirection: 'up',
-    severity: 'medium',
-    icon: 'TrendingDown',
-    filterKey: 'assessment'
   }
 ];
 
