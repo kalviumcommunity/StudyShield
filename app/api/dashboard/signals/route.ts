@@ -64,7 +64,11 @@ export async function GET() {
         icon: 'LogIn',
         filterKey: 'login',
       },
-    ]);
+    ], {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('[GET /api/dashboard/signals] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch signals' }, { status: 500 });

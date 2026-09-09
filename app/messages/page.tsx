@@ -7,10 +7,14 @@ import MessagesFilterBar from '@/components/messages/MessagesFilterBar';
 import MessagesTable from '@/components/messages/MessagesTable';
 import MessagesCardList from '@/components/messages/MessagesCardList';
 import MessagesEmptyState from '@/components/messages/MessagesEmptyState';
-import MessageDetailModal from '@/components/messages/MessageDetailModal';
-import MessageComposerModal from '@/components/messages/MessageComposerModal';
-import StudentDetailDrawer from '@/components/modals/StudentDetailDrawer';
-import NudgeModal from '@/components/modals/NudgeModal';
+import dynamic from 'next/dynamic';
+import { cachedFetch, invalidateCache } from '@/lib/cache';
+
+const MessageDetailModal = dynamic(() => import('@/components/messages/MessageDetailModal'), { ssr: false });
+const MessageComposerModal = dynamic(() => import('@/components/messages/MessageComposerModal'), { ssr: false });
+const StudentDetailDrawer = dynamic(() => import('@/components/modals/StudentDetailDrawer'), { ssr: false });
+const NudgeModal = dynamic(() => import('@/components/modals/NudgeModal'), { ssr: false });
+
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/components/auth/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
@@ -35,19 +39,21 @@ export default function MessagesPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (force = false) => {
+    if (force) invalidateCache('/api/nudges');
     try {
-      const res = await fetch('/api/nudges');
-      if (res.ok) setAllMessages(await res.json());
+      const data = await cachedFetch('/api/nudges');
+      if (data) setAllMessages(data);
     } catch (err) {
       console.error('Messages fetch error:', err);
     }
   }, []);
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (force = false) => {
+    if (force) invalidateCache('/api/students');
     try {
-      const res = await fetch('/api/students');
-      if (res.ok) setStudents(await res.json());
+      const data = await cachedFetch('/api/students');
+      if (data) setStudents(data);
     } catch (err) {
       console.error('Students fetch error:', err);
     }
@@ -161,7 +167,7 @@ export default function MessagesPage() {
   // Handlers
   const handleRefresh = () => {
     setIsRefreshing(true);
-    fetchMessages().finally(() => {
+    Promise.all([fetchMessages(true), fetchStudents(true)]).finally(() => {
       setIsRefreshing(false);
       showToast('Outreach delivery records and responses updated.');
     });
@@ -205,7 +211,9 @@ export default function MessagesPage() {
           })
         )
       );
-      await fetchMessages();
+      invalidateCache('/api/nudges');
+      invalidateCache('/api/students');
+      await fetchMessages(true);
     } catch (err) {
       console.error('Failed to send messages:', err);
     }
@@ -236,7 +244,9 @@ export default function MessagesPage() {
           requiresResponse: true,
         }),
       });
-      await fetchMessages();
+      invalidateCache('/api/nudges');
+      invalidateCache('/api/students');
+      await fetchMessages(true);
     } catch (err) {
       console.error('Failed to persist nudge:', err);
     }
