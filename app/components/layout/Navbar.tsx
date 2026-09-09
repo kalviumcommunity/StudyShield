@@ -58,7 +58,7 @@ export default function Navbar({
     { name: 'Messages', label: 'Messages & Outreach', icon: MessageSquare, href: '/messages' },
     { name: 'Risk Signals', icon: ShieldAlert, href: '/risk-signals' },
     { name: 'Activity', icon: Activity, href: '/dashboard' },
-    { name: 'Reports', icon: Layers, href: '/dashboard' }
+    { name: 'Reports', icon: Layers, href: '/reports' }
   ];
 
   const handleNavClick = (name, href) => {
