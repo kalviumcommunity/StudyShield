@@ -100,8 +100,7 @@ export default function DashboardPage() {
     } else if (tab === "Students") {
       router.push("/students");
     } else if (tab === "Risk Signals") {
-      const el = document.getElementById("students-attention-heading");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      router.push("/risk-signals");
     }
   };
 

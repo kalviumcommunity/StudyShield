@@ -34,6 +34,8 @@ export async function GET() {
       {
         id: 'sig-inactivity',
         title: 'Inactive for 7+ days',
+        description: 'No recent login activity. Extended inactivity adds to the risk score.',
+        action: 'Send a reconnect nudge',
         count: inactive7Plus,
         unit: 'students',
         trend: `${inactive7Plus} students flagged`,
@@ -44,7 +46,9 @@ export async function GET() {
       },
       {
         id: 'sig-quiz',
-        title: 'Quiz completion below 50%',
+        title: 'Missed or incomplete quizzes',
+        description: 'Less than half of assigned quizzes are completed, reducing learning momentum.',
+        action: 'Remind students about pending quizzes',
         count: quizDeclining,
         unit: 'students',
         trend: `${quizDeclining} students flagged`,
@@ -55,7 +59,9 @@ export async function GET() {
       },
       {
         id: 'sig-login',
-        title: 'Login activity dropping',
+        title: 'No login in 3+ days',
+        description: 'A recent activity gap can be an early sign that a student is disengaging.',
+        action: 'Check in before the gap grows',
         count: loginDropping,
         unit: 'students',
         trend: `${loginDropping} students inactive 3+ days`,

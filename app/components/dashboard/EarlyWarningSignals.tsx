@@ -5,10 +5,8 @@ import {
   Clock, 
   HelpCircle, 
   LogIn, 
-  TrendingDown, 
   ChevronRight, 
-  AlertTriangle,
-  ArrowUpRight 
+  AlertTriangle
 } from 'lucide-react';
 import { EARLY_WARNING_SIGNALS } from '@/data/dashboardMetrics';
 
@@ -21,8 +19,6 @@ export default function EarlyWarningSignals({ onSelectSignal, signals = EARLY_WA
         return <HelpCircle className="w-5 h-5 text-amber-600" />;
       case 'LogIn':
         return <LogIn className="w-5 h-5 text-slate-700" />;
-      case 'TrendingDown':
-        return <TrendingDown className="w-5 h-5 text-rose-600" />;
       default:
         return <AlertTriangle className="w-5 h-5 text-amber-600" />;
     }
@@ -50,19 +46,18 @@ export default function EarlyWarningSignals({ onSelectSignal, signals = EARLY_WA
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
         <div>
           <h2 id="early-warning-heading" className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Early Warning Signals
+            Risk Signals
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-              Active Triggers
+              Intervention queue
             </span>
           </h2>
           <p className="text-xs text-slate-500">
-            Patterns and anomalies detected across your monitored students.
+            Behavior changes that can raise R(t) before a student becomes high risk.
           </p>
         </div>
       </div>
 
-      {/* 4 Warning Signal Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {signals.map((signal) => {
           const style = getBgStyle(signal.severity);
 
@@ -83,13 +78,16 @@ export default function EarlyWarningSignals({ onSelectSignal, signals = EARLY_WA
                   </span>
                 </div>
 
-                {/* Signal Name */}
+                {/* Trigger and its intervention context */}
                 <h3 className="mt-3.5 text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
                   {signal.title}
                 </h3>
 
-                {/* Student Count */}
-                <div className="mt-2 flex items-baseline gap-1.5">
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-500 min-h-9">
+                  {signal.description}
+                </p>
+
+                <div className="mt-3 flex items-baseline gap-1.5">
                   <span className="text-2xl font-extrabold text-slate-900 font-sans">
                     {signal.count}
                   </span>
@@ -97,11 +95,20 @@ export default function EarlyWarningSignals({ onSelectSignal, signals = EARLY_WA
                     {signal.unit}
                   </span>
                 </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Recommended next step
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-700">
+                    {signal.action}
+                  </p>
+                </div>
               </div>
 
               {/* Bottom Action */}
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-700 group-hover:text-emerald-800">
-                <span>View students</span>
+                <span>Review flagged students</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>

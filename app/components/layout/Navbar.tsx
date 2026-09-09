@@ -39,6 +39,7 @@ export default function Navbar({
   React.useEffect(() => {
     // Prefetch main routes so tab navigation is instant
     router.prefetch('/dashboard');
+    router.prefetch('/risk-signals');
     router.prefetch('/students');
     router.prefetch('/messages');
   }, [router]);
@@ -55,7 +56,7 @@ export default function Navbar({
     { name: 'Overview', icon: BarChart3, href: '/dashboard' },
     { name: 'Students', icon: Users, href: '/students' },
     { name: 'Messages', label: 'Messages & Outreach', icon: MessageSquare, href: '/messages' },
-    { name: 'Risk Signals', icon: ShieldAlert, href: '/dashboard' },
+    { name: 'Risk Signals', icon: ShieldAlert, href: '/risk-signals' },
     { name: 'Activity', icon: Activity, href: '/dashboard' },
     { name: 'Reports', icon: Layers, href: '/dashboard' }
   ];
