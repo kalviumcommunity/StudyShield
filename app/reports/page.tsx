@@ -106,6 +106,26 @@ export default function ReportsDashboardPage() {
 
         {/* Main Container */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          Page Header
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                  Reports & Analytics
+                </h1>
+                <p className="text-slate-600">
+                  Monitor student engagement, track risk signals, and generate
+                  comprehensive reports.
+                </p>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Refresh Data
+              </button>
+            </div>
+          </div>
           {isDataLoading ? (
             <div className="space-y-4">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse h-32"></div>
